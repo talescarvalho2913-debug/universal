@@ -1525,7 +1525,12 @@ function initSuccess() {
     };
 
     if (!selectedReward) {
-        clearRewardSelection();
+        const defaultReward = resolveRewardSelection({
+            id: 'bag',
+            selectedAt: Date.now()
+        });
+        saveRewardSelection(defaultReward);
+        selectedReward = loadRewardSelection();
     }
     applyRewardState(selectedReward);
 
