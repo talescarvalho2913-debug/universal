@@ -744,7 +744,7 @@ function ensureCouponModalElements() {
                     <h3 id="coupon-title">Desconto liberado no frete</h3>
                     <p id="coupon-message">Você ganhou R$ 5,00 de desconto no frete do seu Kit.</p>
                     <span id="coupon-subtitle" class="coupon-subtitle">Oferta válida agora nesta sessão</span>
-                    <button id="btn-coupon-apply" class="btn-primary" type="button" style="background-color: #D4AF37; color: #1A2B4C;">Usar cupom e pagar mais barato</button>
+                    <button id="btn-coupon-apply" class="btn-primary" type="button" style="background-color: #D4AF37; color: #061228;">Usar cupom e pagar mais barato</button>
                 </div>
             </div>
         `;
