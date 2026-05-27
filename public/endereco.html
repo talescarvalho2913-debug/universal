@@ -15,6 +15,248 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=3.5">
     <script src="/backguard.js?v=1.5"></script>
+    <style>
+        /* Estilos Premium para a Página de Verificação de Disponibilidade de Endereço */
+        body {
+            background: linear-gradient(135deg, #f5f7fb 0%, #e9eff5 100%);
+            font-family: 'Outfit', sans-serif;
+            color: #2c3e50;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 0 16px;
+            box-sizing: border-box;
+        }
+        
+        .step {
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(6, 18, 40, 0.08);
+            border-top: 4px solid #D4AF37;
+            padding: 36px 28px;
+            transition: all 0.3s ease;
+        }
+        
+        .step-count {
+            color: #061228;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+        
+        .progress-bar {
+            background: #edf2f7;
+            border-radius: 10px;
+            height: 6px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            background: linear-gradient(90deg, #061228 0%, #D4AF37 100%) !important;
+            border-radius: 10px;
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        
+        h2 {
+            color: #061228;
+            font-weight: 700;
+            font-size: 1.6rem;
+            margin-top: 24px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        p {
+            color: #5a738e;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .floating-input, .address-extra-input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Outfit', sans-serif;
+            color: #061228;
+            background-color: #f8fafc;
+            transition: all 0.25s ease;
+            outline: none;
+        }
+        
+        .floating-input:focus, .address-extra-input:focus {
+            border-color: #061228;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(6, 18, 40, 0.1);
+        }
+        
+        .floating-label {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            transition: all 0.25s ease;
+            pointer-events: none;
+            background-color: transparent;
+            padding: 0 4px;
+            font-size: 1rem;
+        }
+        
+        .floating-input:focus ~ .floating-label,
+        .floating-input:not(:placeholder-shown) ~ .floating-label {
+            top: 0;
+            font-size: 0.75rem;
+            color: #061228;
+            font-weight: 700;
+            background-color: #ffffff;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #061228 0%, #0c234a 100%) !important;
+            color: #ffffff !important;
+            border: none !important;
+            padding: 15px 24px !important;
+            font-size: 1rem !important;
+            font-weight: 700 !important;
+            border-radius: 12px !important;
+            width: 100% !important;
+            cursor: pointer !important;
+            box-shadow: 0 5px 15px rgba(6, 18, 40, 0.2) !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(6, 18, 40, 0.3) !important;
+            background: linear-gradient(135deg, #0c234a 0%, #123466 100%) !important;
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .address-card {
+            background: #f0f5ff;
+            border: 2px dashed #061228;
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        .address-icon {
+            font-size: 1.8rem;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.15));
+        }
+        
+        .address-details strong {
+            display: block;
+            color: #061228;
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+        
+        .address-details span {
+            color: #5a738e;
+            font-size: 0.9rem;
+        }
+        
+        .address-extra-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        .address-extra-checkline {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: -10px;
+            margin-bottom: 20px;
+            color: #475569;
+            font-size: 0.9rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .address-extra-checkline input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #061228;
+            cursor: pointer;
+        }
+        
+        .freight-box {
+            background: #fff9e6;
+            border: 2px solid #ffe899;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.08);
+            animation: slideIn 0.4s ease;
+        }
+        
+        .freight-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+        }
+        
+        .freight-row:last-of-type {
+            border-bottom: none;
+        }
+        
+        .freight-row span {
+            color: #5c4c1a;
+            font-size: 0.95rem;
+        }
+        
+        .freight-row strong {
+            color: #8c6b00;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+        
+        .freight-row:first-of-type strong {
+            color: #b32424; /* Destaque para o estoque de 3 kits */
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
 </head>
 
 <body data-page="cep">
