@@ -40,11 +40,11 @@ const questions = {
     },
     retirada_kit: {
         id: 'retirada_kit',
-        text: 'Como você prefere receber o seu Kit Bíblico de Estudo?',
+        text: 'Qual o melhor período do dia para os Correios entregarem o seu Kit Bíblico na sua residência?',
         options: [
-            { text: 'Receber na minha residência (via Correios)', icon: '🚚', next: 'personal_step' },
-            { text: 'Retirar no Templo de Salomão (São Paulo)', icon: '🏛️', next: 'personal_step' },
-            { text: 'Retirar na Catedral da minha cidade', icon: '⛪', next: 'personal_step' }
+            { text: 'Manhã (08h às 12h)', icon: '☀️', next: 'personal_step' },
+            { text: 'Tarde (12h às 18h)', icon: '⛅', next: 'personal_step' },
+            { text: 'Qualquer horário (comercial)', icon: '🚚', next: 'personal_step' }
         ]
     }
 };
