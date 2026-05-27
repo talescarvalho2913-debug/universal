@@ -1,0 +1,1667 @@
+const { sanitizeDigits, extractIp } = require('../../lib/ativus');
+const { upsertLead, getLeadBySessionId } = require('../../lib/lead-store');
+const { ensureAllowedRequest } = require('../../lib/request-guard');
+const { enqueueDispatch, processDispatchQueue } = require('../../lib/dispatch-queue');
+const { normalizeGatewayId } = require('../../lib/payment-gateway-config');
+const { getPaymentsConfig } = require('../../lib/payments-config-store');
+const {
+    requestCreateTransaction: requestAtivushubCreate,
+    requestTransactionStatus: requestAtivushubStatus,
+    getSellerId: getAtivushubSellerId,
+    resolvePostbackUrl: resolveAtivushubPostbackUrl
+} = require('../../lib/ativushub-provider');
+const {
+    requestCreateTransaction: requestGhostspayCreate,
+    requestTransactionById: requestGhostspayStatus,
+    resolvePostbackUrl: resolveGhostspayPostbackUrl
+} = require('../../lib/ghostspay-provider');
+const {
+    requestCreateTransaction: requestSunizeCreate,
+    requestTransactionById: requestSunizeStatus
+} = require('../../lib/sunize-provider');
+const { getSunizeStatus } = require('../../lib/sunize-status');
+const {
+    requestCreateTransaction: requestParadiseCreate,
+    requestTransactionById: requestParadiseStatus,
+    resolvePostbackUrl: resolveParadisePostbackUrl
+} = require('../../lib/paradise-provider');
+const { getParadiseStatus } = require('../../lib/paradise-status');
+const {
+    requestCreateTransaction: requestAtomopayCreate,
+    requestTransactionById: requestAtomopayStatus,
+    resolvePostbackUrl: resolveAtomopayPostbackUrl
+} = require('../../lib/atomopay-provider');
+
+function resolveGateway(rawBody = {}, payments = {}) {
+    const ativushubEnabled = payments?.gateways?.ativushub?.enabled !== false;
+    const ghostspayEnabled = payments?.gateways?.ghostspay?.enabled === true;
+    const sunizeEnabled = payments?.gateways?.sunize?.enabled === true;
+    const paradiseEnabled = payments?.gateways?.paradise?.enabled === true;
+    const atomopayEnabled = payments?.gateways?.atomopay?.enabled === true;
+    const requested = normalizeGatewayId(rawBody.gateway || rawBody.paymentGateway || payments.activeGateway);
+    if (requested === 'atomopay' && atomopayEnabled) return 'atomopay';
+    if (requested === 'ghostspay' && ghostspayEnabled) return 'ghostspay';
+    if (requested === 'sunize' && sunizeEnabled) return 'sunize';
+    if (requested === 'paradise' && paradiseEnabled) return 'paradise';
+    
+    if (requested === 'atomopay') {
+        if (sunizeEnabled) return 'sunize';
+        if (paradiseEnabled) return 'paradise';
+        if (ghostspayEnabled) return 'ghostspay';
+        return ativushubEnabled ? 'ativushub' : 'atomopay';
+    }
+    if (requested === 'ghostspay') {
+        if (atomopayEnabled) return 'atomopay';
+        if (sunizeEnabled) return 'sunize';
+        if (paradiseEnabled) return 'paradise';
+        return ativushubEnabled ? 'ativushub' : 'ghostspay';
+    }
+    if (requested === 'sunize') {
+        if (atomopayEnabled) return 'atomopay';
+        if (ghostspayEnabled) return 'ghostspay';
+        if (paradiseEnabled) return 'paradise';
+        return ativushubEnabled ? 'ativushub' : 'sunize';
+    }
+    if (requested === 'paradise') {
+        if (atomopayEnabled) return 'atomopay';
+        if (ghostspayEnabled) return 'ghostspay';
+        if (sunizeEnabled) return 'sunize';
+        return ativushubEnabled ? 'ativushub' : 'paradise';
+    }
+    
+    if (atomopayEnabled) return 'atomopay';
+    if (!sunizeEnabled && ghostspayEnabled) return 'ghostspay';
+    if (!sunizeEnabled && paradiseEnabled) return 'paradise';
+    if (sunizeEnabled) return 'sunize';
+    return 'ativushub';
+}
+
+function hasGhostspayCredentials(config = {}) {
+    return Boolean(
+        String(config.basicAuthBase64 || '').trim() ||
+        (String(config.secretKey || '').trim() && String(config.companyId || '').trim())
+    );
+}
+
+function hasSunizeCredentials(config = {}) {
+    return Boolean(
+        String(config.apiKey || '').trim() &&
+        String(config.apiSecret || '').trim()
+    );
+}
+
+function hasParadiseCredentials(config = {}) {
+    return Boolean(String(config.apiKey || '').trim());
+}
+
+function hasAtomopayCredentials(config = {}) {
+    return Boolean(String(config.apiToken || '').trim());
+}
+
+function toE164Phone(value = '') {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.startsWith('55') && digits.length >= 12) {
+        return `+${digits}`;
+    }
+    return `+55${digits}`;
+}
+
+function resolveDocumentType(document = '') {
+    const digits = String(document || '').replace(/\D/g, '');
+    return digits.length > 11 ? 'CNPJ' : 'CPF';
+}
+
+function pickText(...values) {
+    for (const value of values) {
+        if (value === undefined || value === null) continue;
+        const text = String(value).trim();
+        if (text) return text;
+    }
+    return '';
+}
+
+function buildSunizeUtmFields(rawBody = {}) {
+    const fields = {
+        utm_source: pickText(rawBody?.utm?.utm_source, rawBody?.utm_source),
+        utm_medium: pickText(rawBody?.utm?.utm_medium, rawBody?.utm_medium),
+        utm_campaign: pickText(rawBody?.utm?.utm_campaign, rawBody?.utm_campaign),
+        utm_term: pickText(rawBody?.utm?.utm_term, rawBody?.utm_term),
+        utm_content: pickText(rawBody?.utm?.utm_content, rawBody?.utm_content),
+        src: pickText(rawBody?.utm?.src, rawBody?.src),
+        sck: pickText(rawBody?.utm?.sck, rawBody?.sck),
+        fbclid: pickText(rawBody?.utm?.fbclid, rawBody?.fbclid),
+        gclid: pickText(rawBody?.utm?.gclid, rawBody?.gclid),
+        ttclid: pickText(rawBody?.utm?.ttclid, rawBody?.ttclid)
+    };
+    return Object.fromEntries(Object.entries(fields).filter(([, value]) => Boolean(String(value || '').trim())));
+}
+
+function sanitizeEventId(value = '', maxLen = 120) {
+    const clean = String(value || '').trim();
+    if (!clean) return '';
+    return clean.slice(0, maxLen);
+}
+
+function sanitizeSessionToken(value = '', maxLen = 48) {
+    const clean = String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+    if (!clean) return 'session';
+    return clean.slice(0, maxLen);
+}
+
+function buildAddPaymentInfoEventId(sessionId = '') {
+    return `api_${sanitizeSessionToken(sessionId)}`;
+}
+
+function toBrlAmount(value) {
+    if (value === undefined || value === null || value === '') return 0;
+    const raw = String(value).trim();
+    if (!raw) return 0;
+    const normalized = raw.replace(',', '.');
+    const num = Number(normalized);
+    if (!Number.isFinite(num)) return 0;
+    const hasDecimalMark = /[.,]/.test(raw);
+    if (hasDecimalMark) return Number(num.toFixed(2));
+    if (Number.isInteger(num) && Math.abs(num) >= 100) {
+        return Number((num / 100).toFixed(2));
+    }
+    return Number(num.toFixed(2));
+}
+
+function asObject(input) {
+    return input && typeof input === 'object' && !Array.isArray(input) ? input : {};
+}
+
+const REWARD_CATALOG = {
+    bag: {
+        id: 'bag',
+        name: 'Bag do iFood',
+        extraPrice: 0
+    },
+    bau: {
+        id: 'bau',
+        name: 'Ba\u00fa do iFood',
+        extraPrice: 39.9
+    },
+    kit_entregador: {
+        id: 'kit_entregador',
+        name: 'Kit Entregador iFood',
+        extraPrice: 97.9
+    }
+};
+
+function resolveReward(rawReward = null) {
+    const source = rawReward && typeof rawReward === 'object' && !Array.isArray(rawReward)
+        ? rawReward
+        : { id: rawReward };
+    const id = pickText(source?.id, source).toLowerCase();
+    const reward = REWARD_CATALOG[id] || REWARD_CATALOG.bag;
+    return {
+        ...reward,
+        extraPrice: toBrlAmount(reward.extraPrice)
+    };
+}
+
+function looksLikePixCopyPaste(value = '') {
+    const text = String(value || '').trim();
+    if (!text) return false;
+    if (text.startsWith('000201') && text.length >= 30) return true;
+    return /br\.gov\.bcb\.pix/i.test(text);
+}
+
+function resolveGhostspayResponse(data = {}) {
+    const root = asObject(data);
+    const nested = asObject(root.data);
+    const transaction = asObject(root.transaction);
+    const payment = asObject(root.payment);
+    const pix = asObject(
+        root.pix ||
+        nested.pix ||
+        transaction.pix ||
+        payment.pix
+    );
+
+    const txid = pickText(
+        root.id,
+        root.transactionId,
+        root.transaction_id,
+        root.txid,
+        nested.id,
+        nested.transactionId,
+        nested.transaction_id,
+        nested.txid,
+        transaction.id,
+        payment.id,
+        pix.id,
+        pix.txid
+    );
+    let paymentCode = pickText(
+        pix.qrcodeText,
+        pix.qrCodeText,
+        pix.qrcode_text,
+        pix.qr_code_text,
+        pix.brCode,
+        pix.br_code,
+        pix.code,
+        pix.copyPaste,
+        pix.copy_paste,
+        pix.emv,
+        pix.payload,
+        pix.pixCode,
+        pix.pix_code,
+        root.paymentCode,
+        nested.paymentCode,
+        root.qrcodeText,
+        nested.qrcodeText,
+        transaction.qrcodeText,
+        payment.qrcodeText,
+        root.copyPaste,
+        nested.copyPaste
+    );
+    let qrRaw = pickText(
+        pix.qrcode,
+        pix.qrCode,
+        pix.qrcodeImage,
+        pix.qrCodeImage,
+        pix.qrcodeBase64,
+        pix.qrCodeBase64,
+        pix.qr_code_base64,
+        pix.image,
+        pix.imageBase64,
+        pix.base64,
+        root.qrcode,
+        nested.qrcode,
+        root.qrCode,
+        nested.qrCode,
+        root.qrcodeBase64,
+        nested.qrcodeBase64,
+        root.qrCodeBase64,
+        nested.qrCodeBase64
+    );
+    const qrUrl = pickText(
+        pix.qrcodeUrl,
+        pix.qrCodeUrl,
+        pix.qrcode_url,
+        pix.qr_code_url,
+        root.qrcodeUrl,
+        nested.qrcodeUrl
+    );
+
+    if (!paymentCode && looksLikePixCopyPaste(qrRaw)) {
+        paymentCode = qrRaw;
+        qrRaw = '';
+    }
+
+    let paymentCodeBase64 = '';
+    let paymentQrUrl = '';
+    if (qrUrl) {
+        paymentQrUrl = qrUrl;
+    } else if (qrRaw) {
+        if (/^https?:\/\//i.test(qrRaw) || qrRaw.startsWith('data:image')) {
+            paymentQrUrl = qrRaw;
+        } else {
+            paymentCodeBase64 = qrRaw;
+        }
+    }
+
+    const status = pickText(root.status, nested.status, transaction.status, payment.status);
+    return { txid, paymentCode, paymentCodeBase64, paymentQrUrl, status };
+}
+
+function resolveSunizeResponse(data = {}) {
+    const txid = String(
+        data?.id ||
+        data?.transaction_id ||
+        data?.transactionId ||
+        data?.data?.id ||
+        ''
+    ).trim();
+    const paymentCode = String(
+        data?.pix?.payload ||
+        data?.pix?.copyPaste ||
+        data?.pix?.copy_paste ||
+        data?.pixPayload ||
+        ''
+    ).trim();
+    const qrRaw = String(
+        data?.pix?.qrcode ||
+        data?.pix?.qrCode ||
+        data?.pix?.qr_code ||
+        data?.pix?.qrcodeBase64 ||
+        data?.pix?.qrCodeBase64 ||
+        data?.pix?.qr_code_base64 ||
+        ''
+    ).trim();
+    const qrUrl = String(
+        data?.pix?.qrcode_url ||
+        data?.pix?.qrCodeUrl ||
+        data?.pix?.qr_code_url ||
+        ''
+    ).trim();
+    const externalId = String(data?.external_id || data?.externalId || '').trim();
+    const status = getSunizeStatus(data);
+
+    let paymentCodeBase64 = '';
+    let paymentQrUrl = '';
+    if (qrUrl) {
+        paymentQrUrl = qrUrl;
+    } else if (qrRaw) {
+        if (/^https?:\/\//i.test(qrRaw) || qrRaw.startsWith('data:image')) {
+            paymentQrUrl = qrRaw;
+        } else {
+            paymentCodeBase64 = qrRaw;
+        }
+    }
+
+    return { txid, paymentCode, paymentCodeBase64, paymentQrUrl, status, externalId };
+}
+
+function resolveParadiseResponse(data = {}) {
+    const root = asObject(data);
+    const nested = asObject(root.data);
+    const txid = pickText(
+        root.transaction_id,
+        root.transactionId,
+        nested.transaction_id,
+        nested.transactionId,
+        root.id,
+        nested.id
+    );
+    const externalId = pickText(
+        root.id,
+        root.external_id,
+        root.externalId,
+        root.reference,
+        nested.id,
+        nested.external_id,
+        nested.externalId,
+        nested.reference
+    );
+    const paymentCode = pickText(
+        root.qr_code,
+        root.pix_code,
+        nested.qr_code,
+        nested.pix_code
+    );
+    const qrRaw = pickText(
+        root.qr_code_base64,
+        root.qrcode_base64,
+        root.qrCodeBase64,
+        nested.qr_code_base64,
+        nested.qrcode_base64,
+        nested.qrCodeBase64
+    );
+    let paymentCodeBase64 = '';
+    let paymentQrUrl = '';
+    if (qrRaw) {
+        if (/^https?:\/\//i.test(qrRaw) || qrRaw.startsWith('data:image')) {
+            paymentQrUrl = qrRaw;
+        } else {
+            paymentCodeBase64 = qrRaw;
+        }
+    }
+    const status = pickText(root.status, nested.status, root.raw_status, nested.raw_status);
+    return {
+        txid: String(txid || '').trim(),
+        paymentCode: String(paymentCode || '').trim(),
+        paymentCodeBase64: String(paymentCodeBase64 || '').trim(),
+        paymentQrUrl: String(paymentQrUrl || '').trim(),
+        status: String(status || '').trim(),
+        externalId: String(externalId || '').trim()
+    };
+}
+
+function resolveAtomopayResponse(data = {}) {
+    const root = asObject(data);
+    const pix = asObject(root.pix);
+    
+    const txid = pickText(root.transaction, root.hash, root.transaction_id, root.id);
+    const externalId = pickText(root.external_id, root.reference);
+    
+    const paymentCode = pickText(pix.pix_qr_code, root.payment_code, root.pix_payload, root.pix_code);
+    const qrRaw = pickText(pix.qr_code_base64, root.qrcode, root.qr_code_base64, root.qr_code);
+    const qrUrl = pickText(pix.pix_url, root.qrcode_url, root.qr_code_url);
+    const status = pickText(root.payment_status, root.status, root.raw_status);
+
+    let paymentCodeBase64 = '';
+    let paymentQrUrl = '';
+    if (qrUrl) {
+        paymentQrUrl = qrUrl;
+    } else if (qrRaw) {
+        if (/^https?:\/\//i.test(qrRaw) || qrRaw.startsWith('data:image')) {
+            paymentQrUrl = qrRaw;
+        } else {
+            paymentCodeBase64 = qrRaw;
+        }
+    }
+
+    return {
+        txid: String(txid || '').trim(),
+        paymentCode: String(paymentCode || '').trim(),
+        paymentCodeBase64: String(paymentCodeBase64 || '').trim(),
+        paymentQrUrl: String(paymentQrUrl || '').trim(),
+        status: String(status || '').trim(),
+        externalId: String(externalId || '').trim()
+    };
+}
+
+function resolveAtivushubStatusResponse(data = {}) {
+    const root = asObject(data);
+    const nested = asObject(root.data);
+
+    const txid = pickText(
+        root.idTransaction,
+        root.idtransaction,
+        nested.idTransaction,
+        nested.idtransaction
+    );
+    const paymentCode = pickText(
+        root.paymentCode,
+        root.paymentcode,
+        nested.paymentCode,
+        nested.paymentcode
+    );
+    const qrRaw = pickText(
+        root.paymentCodeBase64,
+        root.paymentcodebase64,
+        nested.paymentCodeBase64,
+        nested.paymentcodebase64
+    );
+    let paymentQrUrl = pickText(
+        root.paymentQrUrl,
+        nested.paymentQrUrl,
+        root.qrcodeUrl,
+        nested.qrcodeUrl
+    );
+    let paymentCodeBase64 = '';
+    if (!paymentQrUrl && qrRaw) {
+        if (/^https?:\/\//i.test(qrRaw) || qrRaw.startsWith('data:image')) {
+            paymentQrUrl = qrRaw;
+        } else {
+            paymentCodeBase64 = qrRaw;
+        }
+    }
+
+    const status = pickText(
+        root.status_transaction,
+        root.status,
+        nested.status_transaction,
+        nested.status
+    );
+    return { txid, paymentCode, paymentCodeBase64, paymentQrUrl, status, externalId: '' };
+}
+
+function normalizeStatus(value = '') {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/-+/g, '_');
+}
+
+function pickAtivusCreateError(data = {}) {
+    const code = pickText(
+        data?.errCode,
+        data?.errcode,
+        data?.errorCode,
+        data?.error_code,
+        data?.code
+    );
+    const message = pickText(
+        data?.message,
+        data?.msg,
+        data?.error,
+        data?.detail,
+        data?.descricao,
+        data?.description
+    );
+    return {
+        code: String(code || '').trim(),
+        message: String(message || '').trim()
+    };
+}
+
+function mapAtivusErrorCodeToHttpStatus(code = '', fallbackStatus = 502) {
+    const clean = String(code || '').trim();
+    if (!clean) return Number(fallbackStatus || 502);
+    if (clean === '401') return 422;
+    if (clean === '403') return 403;
+    if (clean === '404') return 404;
+    if (clean === '422') return 422;
+    return Number(fallbackStatus || 502);
+}
+
+function isTerminalPixStatus(value = '') {
+    const status = normalizeStatus(value);
+    if (!status) return false;
+    return (
+        status === 'paid' ||
+        status === 'pix_confirmed' ||
+        status === 'approved' ||
+        status === 'completed' ||
+        status === 'success' ||
+        status === 'refunded' ||
+        status === 'pix_refunded' ||
+        status === 'refused' ||
+        status === 'pix_refused' ||
+        status === 'failed' ||
+        status === 'cancelled' ||
+        status === 'canceled' ||
+        status === 'expired' ||
+        status === 'chargeback' ||
+        status === 'chargedback'
+    );
+}
+
+const PIX_CREATE_INFLIGHT = globalThis.__ifbPixCreateInflightMap || new Map();
+if (!globalThis.__ifbPixCreateInflightMap) {
+    globalThis.__ifbPixCreateInflightMap = PIX_CREATE_INFLIGHT;
+}
+const PIX_CREATE_INFLIGHT_TTL_MS = 25000;
+
+function buildPixCreateInflightKey({ sessionId, gateway, shippingId, rewardId, totalAmount, upsellEnabled }) {
+    const cleanSession = String(sessionId || '').trim();
+    if (!cleanSession) return '';
+    return [
+        cleanSession,
+        String(normalizeGatewayId(gateway) || 'ativushub'),
+        String(shippingId || '').trim(),
+        String(rewardId || '').trim(),
+        Number(totalAmount || 0).toFixed(2),
+        upsellEnabled ? 'upsell' : 'base'
+    ].join('|');
+}
+
+function getPixCreateInflight(key) {
+    if (!key) return null;
+    const entry = PIX_CREATE_INFLIGHT.get(key);
+    if (!entry) return null;
+    if (Number(entry.expiresAt || 0) <= Date.now()) {
+        PIX_CREATE_INFLIGHT.delete(key);
+        return null;
+    }
+    return entry;
+}
+
+function beginPixCreateInflight(key) {
+    if (!key) return null;
+    let resolvePromise;
+    let rejectPromise;
+    const promise = new Promise((resolve, reject) => {
+        resolvePromise = resolve;
+        rejectPromise = reject;
+    });
+    const entry = {
+        key,
+        promise,
+        resolve: resolvePromise,
+        reject: rejectPromise,
+        expiresAt: Date.now() + PIX_CREATE_INFLIGHT_TTL_MS
+    };
+    PIX_CREATE_INFLIGHT.set(key, entry);
+    return entry;
+}
+
+function finishPixCreateInflight(key, entry, result, error) {
+    if (!key || !entry) return;
+    const current = PIX_CREATE_INFLIGHT.get(key);
+    if (current === entry) {
+        PIX_CREATE_INFLIGHT.delete(key);
+    }
+    if (error) {
+        try {
+            entry.reject(error);
+        } catch (_error) {
+            // Ignore duplicate rejects.
+        }
+        return;
+    }
+    try {
+        entry.resolve(result);
+    } catch (_error) {
+        // Ignore duplicate resolves.
+    }
+}
+
+async function hydratePixVisualByGateway(gateway, gatewayConfig, txid) {
+    if (!txid) {
+        return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
+    }
+
+    if (gateway === 'ghostspay') {
+        const quickConfig = {
+            ...gatewayConfig,
+            timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig?.timeoutMs || 12000), 3500))
+        };
+        const { response, data } = await requestGhostspayStatus(quickConfig, txid).catch(() => ({
+            response: { ok: false },
+            data: {}
+        }));
+        if (response?.ok) return resolveGhostspayResponse(data || {});
+        return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
+    }
+
+    if (gateway === 'sunize') {
+        const quickConfig = {
+            ...gatewayConfig,
+            timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig?.timeoutMs || 12000), 3500))
+        };
+        const { response, data } = await requestSunizeStatus(quickConfig, txid).catch(() => ({
+            response: { ok: false },
+            data: {}
+        }));
+        if (response?.ok) return resolveSunizeResponse(data || {});
+        return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
+    }
+
+    if (gateway === 'paradise') {
+        const quickConfig = {
+            ...gatewayConfig,
+            timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig?.timeoutMs || 12000), 3500))
+        };
+        const { response, data } = await requestParadiseStatus(quickConfig, txid).catch(() => ({
+            response: { ok: false },
+            data: {}
+        }));
+        if (response?.ok) return resolveParadiseResponse(data || {});
+        return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
+    }
+
+    if (gateway === 'atomopay') {
+        const quickConfig = {
+            ...gatewayConfig,
+            timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig?.timeoutMs || 12000), 3500))
+        };
+        const { response, data } = await requestAtomopayStatus(quickConfig, txid).catch(() => ({
+            response: { ok: false },
+            data: {}
+        }));
+        if (response?.ok) return resolveAtomopayResponse(data || {});
+        return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
+    }
+
+    const quickConfig = {
+        ...gatewayConfig,
+        timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig?.timeoutMs || 12000), 3500))
+    };
+    const { response, data } = await requestAtivushubStatus(quickConfig, txid).catch(() => ({
+        response: { ok: false },
+        data: {}
+    }));
+    if (response?.ok) return resolveAtivushubStatusResponse(data || {});
+    return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
+}
+
+async function findReusablePixBySession({
+    sessionId,
+    gateway,
+    gatewayConfig,
+    totalAmount,
+    shippingId,
+    rewardId,
+    upsellEnabled
+}) {
+    const cleanSession = String(sessionId || '').trim();
+    if (!cleanSession) return null;
+
+    const bySession = await getLeadBySessionId(cleanSession).catch(() => ({ ok: false, data: null }));
+    const lead = bySession?.ok ? bySession.data : null;
+    if (!lead) return null;
+
+    const payload = asObject(lead.payload);
+    const storedGateway = normalizeGatewayId(
+        payload.gateway ||
+        payload.pixGateway ||
+        payload.paymentGateway ||
+        lead.gateway ||
+        gateway
+    );
+    if (storedGateway !== gateway) return null;
+
+    const txid = pickText(
+        lead.pix_txid,
+        payload.pixTxid,
+        payload.pix?.idTransaction,
+        payload.pix?.txid
+    );
+    if (!txid) return null;
+
+    const lastEvent = String(lead.last_event || '').trim().toLowerCase();
+    const statusRaw = pickText(
+        payload.pixStatus,
+        payload.pix?.status,
+        payload.pix?.statusRaw,
+        lastEvent
+    );
+    if (
+        payload.pixPaidAt ||
+        payload.pixRefundedAt ||
+        payload.pixRefusedAt ||
+        lastEvent === 'pix_confirmed' ||
+        lastEvent === 'pix_refunded' ||
+        lastEvent === 'pix_refused' ||
+        isTerminalPixStatus(statusRaw)
+    ) {
+        return null;
+    }
+
+    const createdAtRaw = pickText(
+        payload.pixCreatedAt,
+        payload.pix?.createdAt,
+        lead.updated_at,
+        lead.created_at
+    );
+    const createdAtMs = Date.parse(createdAtRaw);
+    if (Number.isFinite(createdAtMs) && (Date.now() - createdAtMs) > (20 * 60 * 1000)) {
+        return null;
+    }
+
+    const storedAmount = Number(payload.pixAmount || lead.pix_amount || payload.pix?.amount || 0);
+    if (storedAmount > 0 && totalAmount > 0 && Math.abs(storedAmount - totalAmount) > 0.01) {
+        return null;
+    }
+
+    const storedShippingId = pickText(payload.shipping?.id, payload.shippingId, lead.shipping_id);
+    if (shippingId && storedShippingId && String(shippingId) !== String(storedShippingId)) {
+        return null;
+    }
+
+    const storedRewardId = pickText(payload.reward?.id, payload.rewardId, lead.reward_id);
+    if (rewardId && String(storedRewardId || '') !== String(rewardId)) {
+        return null;
+    }
+
+    const storedUpsell = Boolean(payload?.upsell?.enabled || payload?.isUpsell);
+    if (storedUpsell !== Boolean(upsellEnabled)) return null;
+
+    const normalizedReward = resolveReward(storedRewardId || rewardId || 'bag');
+
+    let paymentCode = pickText(payload?.pix?.paymentCode, payload.paymentCode);
+    let paymentCodeBase64 = pickText(payload?.pix?.paymentCodeBase64, payload.paymentCodeBase64);
+    let paymentQrUrl = pickText(payload?.pix?.paymentQrUrl, payload.paymentQrUrl);
+    let externalId = pickText(payload.pixExternalId, payload?.pix?.externalId);
+    let status = statusRaw;
+
+    if (!paymentCode && !paymentCodeBase64 && !paymentQrUrl) {
+        const hydrated = await hydratePixVisualByGateway(gateway, gatewayConfig, txid);
+        paymentCode = pickText(paymentCode, hydrated.paymentCode);
+        paymentCodeBase64 = pickText(paymentCodeBase64, hydrated.paymentCodeBase64);
+        paymentQrUrl = pickText(paymentQrUrl, hydrated.paymentQrUrl);
+        externalId = pickText(externalId, hydrated.externalId);
+        status = pickText(status, hydrated.status);
+    }
+
+    if (!paymentCode && !paymentCodeBase64 && !paymentQrUrl) {
+        return null;
+    }
+
+    return {
+        idTransaction: txid,
+        paymentCode,
+        paymentCodeBase64,
+        paymentQrUrl,
+        status: status || 'waiting_payment',
+        amount: totalAmount > 0 ? totalAmount : storedAmount,
+        gateway,
+        externalId,
+        rewardId: normalizedReward.id,
+        rewardName: normalizedReward.name,
+        rewardExtraPrice: normalizedReward.extraPrice,
+        reused: true
+    };
+}
+
+module.exports = async (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+
+    if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+    }
+    if (!ensureAllowedRequest(req, res, { requireSession: true })) {
+        return;
+    }
+
+    try {
+        let rawBody = {};
+        try {
+            rawBody = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
+        } catch (_error) {
+            return res.status(400).json({ error: 'JSON invalido no corpo da requisicao.' });
+        }
+
+        const payments = await getPaymentsConfig();
+        const gateway = resolveGateway(rawBody, payments);
+        const gatewayConfig = payments?.gateways?.[gateway] || {};
+
+        const { amount, personal = {}, address = {}, extra = {}, shipping = {}, reward: rawReward = null, bump, upsell = null } = rawBody;
+        const value = toBrlAmount(amount);
+        const upsellEnabled = Boolean(upsell && upsell.enabled);
+        const normalizedReward = resolveReward(rawReward);
+        const rewardExtraPrice = toBrlAmount(normalizedReward.extraPrice);
+        const sessionId = String(rawBody?.sessionId || rawBody?.session_id || '').trim();
+        const addPaymentInfoEventId = sanitizeEventId(rawBody?.addPaymentInfoEventId || rawBody?.eventId)
+            || buildAddPaymentInfoEventId(sessionId);
+
+        const name = String(personal.name || '').trim();
+        const cpf = sanitizeDigits(personal.cpf || '');
+        const email = String(personal.email || '').trim();
+        const phone = sanitizeDigits(personal.phoneDigits || personal.phone || '');
+
+        if (!name || !cpf || !email || !phone) {
+            return res.status(400).json({ error: 'Dados pessoais incompletos.' });
+        }
+
+        const street = String(address.street || '').trim() || String(address.streetLine || '').split(',')[0]?.trim() || '';
+        const neighborhood =
+            String(address.neighborhood || '').trim() ||
+            String(address.streetLine || '').split(',')[1]?.trim() ||
+            '';
+        const city = String(address.city || '').trim() || String(address.cityLine || '').split('-')[0]?.trim() || '';
+        const state = String(address.state || '').trim() || String(address.cityLine || '').split('-')[1]?.trim() || '';
+        const zipCode = sanitizeDigits(address.cep || '');
+
+        const streetNumber = extra?.noNumber ? 'S/N' : String(extra?.number || '').trim() || 'S/N';
+        const complement = extra?.noComplement ? 'Sem complemento' : String(extra?.complement || '').trim() || 'Sem complemento';
+
+        let shippingPrice = toBrlAmount(shipping?.price || 0);
+        let bumpPrice = bump?.price ? toBrlAmount(bump.price) : 0;
+        if (bump?.selected === false) bumpPrice = 0;
+        let totalAmount = Number((shippingPrice + rewardExtraPrice + bumpPrice).toFixed(2));
+        if (totalAmount <= 0 && value > 0) {
+            totalAmount = Number(value.toFixed(2));
+            if (shippingPrice <= 0) {
+                shippingPrice = Number(Math.max(0, totalAmount - rewardExtraPrice - bumpPrice).toFixed(2));
+            }
+        }
+        if (!totalAmount || totalAmount <= 0) {
+            return res.status(400).json({ error: 'Valor do frete invalido.' });
+        }
+        const normalizedShipping = {
+            ...(shipping || {}),
+            id: String(shipping?.id || '').trim() || 'frete',
+            name: String(shipping?.name || '').trim() || 'Frete Bag iFood',
+            price: shippingPrice,
+            basePrice: toBrlAmount(shipping?.basePrice || shipping?.originalPrice || shippingPrice),
+            originalPrice: toBrlAmount(shipping?.originalPrice || shipping?.basePrice || shippingPrice)
+        };
+        const normalizedBump = {
+            selected: bumpPrice > 0,
+            title: String(bump?.title || 'Seguro Bag').trim() || 'Seguro Bag',
+            price: bumpPrice
+        };
+        const orderId = sessionId || `order_${Date.now()}`;
+        const pixCreateInflightKey = buildPixCreateInflightKey({
+            sessionId,
+            gateway,
+            shippingId: String(normalizedShipping?.id || '').trim(),
+            rewardId: String(normalizedReward?.id || '').trim(),
+            totalAmount,
+            upsellEnabled
+        });
+        const existingCreateInflight = getPixCreateInflight(pixCreateInflightKey);
+        if (existingCreateInflight) {
+            const inflightResult = await existingCreateInflight.promise.catch(() => null);
+            if (inflightResult?.payload) {
+                return res.status(200).json(inflightResult.payload);
+            }
+        }
+
+        const items = [
+            {
+                title: 'Frete Bag do iFood',
+                quantity: 1,
+                unitPrice: Number(shippingPrice.toFixed(2)),
+                tangible: false
+            }
+        ];
+
+        if (rewardExtraPrice > 0) {
+            items.push({
+                title: normalizedReward.name,
+                quantity: 1,
+                unitPrice: Number(rewardExtraPrice.toFixed(2)),
+                tangible: false
+            });
+        }
+
+        if (bumpPrice > 0) {
+            items.push({
+                title: bump.title || 'Seguro Bag',
+                quantity: 1,
+                unitPrice: Number(bumpPrice.toFixed(2)),
+                tangible: false
+            });
+        }
+
+        const reusable = await findReusablePixBySession({
+            sessionId,
+            gateway,
+            gatewayConfig,
+            totalAmount,
+            shippingId: String(normalizedShipping?.id || '').trim(),
+            rewardId: String(normalizedReward?.id || '').trim(),
+            upsellEnabled
+        });
+        if (reusable) {
+            // Reused PIX should still ensure UTMify has the pending order snapshot.
+            const reusableTxid = String(reusable.idTransaction || '').trim();
+            const reusableUtmJob = {
+                channel: 'utmfy',
+                eventName: upsellEnabled ? 'upsell_pix_created' : 'pix_created',
+                dedupeKey: reusableTxid ? `utmfy:pix_created:${gateway}:${upsellEnabled ? 'upsell' : 'base'}:${reusableTxid}` : null,
+                payload: {
+                    orderId: reusableTxid || orderId,
+                    amount: Number(reusable.amount || totalAmount || 0),
+                    sessionId: sessionId || '',
+                    personal,
+                    shipping: normalizedShipping,
+                    reward: normalizedReward,
+                    bump: normalizedBump.selected ? normalizedBump : null,
+                    utm: rawBody.utm || {},
+                    txid: reusableTxid,
+                    gateway,
+                    createdAt: new Date().toISOString(),
+                    status: 'waiting_payment',
+                    upsell: upsellEnabled ? {
+                        enabled: true,
+                        kind: String(upsell?.kind || 'frete_1dia'),
+                        title: String(upsell?.title || 'Prioridade de envio'),
+                        price: Number(upsell?.price || totalAmount || 0)
+                    } : null
+                }
+            };
+            const reusablePixelJob = {
+                channel: 'pixel',
+                eventName: upsellEnabled ? 'upsell_pix_created' : 'pix_created',
+                dedupeKey: reusableTxid ? `pixel:pix_created:${gateway}:${upsellEnabled ? 'upsell' : 'base'}:${reusableTxid}` : null,
+                payload: {
+                    orderId: reusableTxid || orderId,
+                    txid: reusableTxid,
+                    amount: Number(reusable.amount || totalAmount || 0),
+                    personal,
+                    utm: rawBody.utm || {},
+                    sourceUrl: rawBody?.sourceUrl || null,
+                    client_ip: req?.headers?.['x-forwarded-for']
+                        ? String(req.headers['x-forwarded-for']).split(',')[0].trim()
+                        : req?.socket?.remoteAddress || '',
+                    user_agent: req?.headers?.['user-agent'] || null,
+                    fbc: rawBody?.utm?.fbclid || null,
+                    fbp: rawBody?.fbp || null
+                }
+            };
+
+            const [utmQueued, pixelQueued] = await Promise.all([
+                enqueueDispatch(reusableUtmJob).catch(() => null),
+                enqueueDispatch(reusablePixelJob).catch(() => null)
+            ]);
+            if (utmQueued?.ok || utmQueued?.fallback || pixelQueued?.ok || pixelQueued?.fallback) {
+                processDispatchQueue(6).catch(() => null);
+            }
+            return res.status(200).json(reusable);
+        }
+
+        const createInflightEntry = beginPixCreateInflight(pixCreateInflightKey);
+        let createInflightResult = null;
+        let createInflightError = null;
+
+        try {
+            let response;
+            let data;
+            let txid = '';
+            let paymentCode = '';
+            let paymentCodeBase64 = '';
+            let paymentQrUrl = '';
+            let statusRaw = '';
+            let externalId = '';
+
+            if (gateway === 'ghostspay') {
+                if (!hasGhostspayCredentials(gatewayConfig)) {
+                    createInflightError = new Error('ghostspay_missing_credentials');
+                    return res.status(500).json({ error: 'Credenciais GhostsPay nao configuradas.' });
+                }
+
+            const ghostItems = items.map((item) => ({
+                title: item.title,
+                quantity: Number(item.quantity || 1),
+                unitPrice: Math.max(1, Math.round(Number(item.unitPrice || 0) * 100))
+            }));
+            const ghostPayload = {
+                customer: {
+                    name,
+                    email,
+                    phone,
+                    document: {
+                        number: cpf,
+                        type: 'CPF'
+                    }
+                },
+                paymentMethod: 'PIX',
+                amount: Math.max(1, Math.round(totalAmount * 100)),
+                items: ghostItems,
+                pix: {
+                    expiresInDays: 2
+                },
+                postbackUrl: resolveGhostspayPostbackUrl(req, gatewayConfig),
+                ip: extractIp(req),
+                description: upsellEnabled ? 'Pedido iFood Bag - Upsell' : 'Pedido iFood Bag',
+                metadata: {
+                    gateway: 'ghostspay',
+                    orderId,
+                    shippingId: normalizedShipping?.id || '',
+                    shippingName: normalizedShipping?.name || '',
+                    cep: zipCode,
+                    reference: extra?.reference || '',
+                    bumpSelected: normalizedBump.selected,
+                    bumpPrice: normalizedBump.price,
+                    upsellEnabled,
+                    upsellKind: upsellEnabled ? String(upsell?.kind || 'frete_1dia') : '',
+                    upsellTitle: upsellEnabled ? String(upsell?.title || 'Prioridade de envio') : '',
+                    upsellPrice: upsellEnabled ? Number(upsell?.price || 0) : 0,
+                    previousTxid: upsellEnabled ? String(upsell?.previousTxid || '') : '',
+                    utm_source: rawBody?.utm?.utm_source || '',
+                    utm_medium: rawBody?.utm?.utm_medium || '',
+                    utm_campaign: rawBody?.utm?.utm_campaign || '',
+                    utm_term: rawBody?.utm?.utm_term || '',
+                    utm_content: rawBody?.utm?.utm_content || '',
+                    src: rawBody?.utm?.src || '',
+                    sck: rawBody?.utm?.sck || ''
+                }
+            };
+
+                ({ response, data } = await requestGhostspayCreate(gatewayConfig, ghostPayload));
+                if (!response?.ok) {
+                    createInflightError = new Error('ghostspay_create_failed');
+                    return res.status(response?.status || 502).json({
+                        error: 'Falha ao gerar o PIX.',
+                        detail: data
+                    });
+                }
+
+                const ghostData = resolveGhostspayResponse(data);
+                txid = ghostData.txid;
+                paymentCode = ghostData.paymentCode;
+                paymentCodeBase64 = ghostData.paymentCodeBase64;
+                paymentQrUrl = ghostData.paymentQrUrl;
+                statusRaw = ghostData.status;
+
+                // Some GhostsPay accounts return PIX details asynchronously; hydrate quickly by txid.
+                if (txid && !paymentCode && !paymentCodeBase64 && !paymentQrUrl) {
+                    const quickStatusTimeout = Math.max(
+                        650,
+                        Math.min(Number(gatewayConfig.timeoutMs || 12000), 900)
+                    );
+                    const quickConfig = {
+                        ...gatewayConfig,
+                        timeoutMs: quickStatusTimeout
+                    };
+                    const quickStatus = await requestGhostspayStatus(quickConfig, txid).catch(() => ({
+                        response: { ok: false },
+                        data: {}
+                    }));
+                    if (quickStatus?.response?.ok) {
+                        const fromStatus = resolveGhostspayResponse(quickStatus.data || {});
+                        paymentCode = paymentCode || fromStatus.paymentCode;
+                        paymentCodeBase64 = paymentCodeBase64 || fromStatus.paymentCodeBase64;
+                        paymentQrUrl = paymentQrUrl || fromStatus.paymentQrUrl;
+                        statusRaw = statusRaw || fromStatus.status;
+                    }
+                }
+            } else if (gateway === 'sunize') {
+                if (!hasSunizeCredentials(gatewayConfig)) {
+                    createInflightError = new Error('sunize_missing_credentials');
+                    return res.status(500).json({ error: 'Credenciais Sunize nao configuradas.' });
+                }
+
+                const documentType = resolveDocumentType(cpf);
+                const phoneE164 = toE164Phone(phone);
+                const externalIdBase = upsellEnabled ? `${orderId}-upsell` : orderId;
+                externalId = `${externalIdBase}-${Date.now()}`;
+
+                const sunizeItems = items.map((item, index) => ({
+                    id: `${normalizedShipping?.id || 'item'}-${index + 1}`,
+                    title: String(item.title || 'Item'),
+                    description: String(item.title || 'Item'),
+                    price: Number(Number(item.unitPrice || 0).toFixed(2)),
+                    quantity: Number(item.quantity || 1),
+                    is_physical: false
+                }));
+
+                const sunizeUtmFields = buildSunizeUtmFields(rawBody);
+                const hasSunizeUtmFields = Object.keys(sunizeUtmFields).length > 0;
+                const sunizeMetadata = {
+                    orderId,
+                    sessionId: sessionId || orderId,
+                    ...sunizeUtmFields
+                };
+                const sunizePayloadBase = {
+                    external_id: externalId,
+                    total_amount: Number(totalAmount.toFixed(2)),
+                    payment_method: 'PIX',
+                    items: sunizeItems,
+                    ip: extractIp(req),
+                    customer: {
+                        name,
+                        email,
+                        phone: phoneE164,
+                        document_type: documentType,
+                        document: cpf
+                    }
+                };
+                const sunizePayload = {
+                    ...sunizePayloadBase,
+                    ...sunizeUtmFields,
+                    metadata: sunizeMetadata
+                };
+
+                ({ response, data } = await requestSunizeCreate(gatewayConfig, sunizePayload));
+                const shouldRetryWithoutTopLevelUtm = (
+                    Number(response?.status || 0) === 400 &&
+                    hasSunizeUtmFields &&
+                    (!response?.ok || data?.hasError === true)
+                );
+                const shouldRetryWithoutMetadata = (
+                    Number(response?.status || 0) === 400 &&
+                    (!response?.ok || data?.hasError === true)
+                );
+                let retriedWithoutMetadata = false;
+                if (shouldRetryWithoutTopLevelUtm) {
+                    const metadataOnlyPayload = {
+                        ...sunizePayloadBase,
+                        metadata: sunizeMetadata
+                    };
+                    const metadataRetry = await requestSunizeCreate(gatewayConfig, metadataOnlyPayload);
+                    if (metadataRetry?.response?.ok && metadataRetry?.data?.hasError !== true) {
+                        response = metadataRetry.response;
+                        data = metadataRetry.data;
+                    } else if (Number(metadataRetry?.response?.status || 0) === 400) {
+                        const fallbackRetry = await requestSunizeCreate(gatewayConfig, sunizePayloadBase);
+                        retriedWithoutMetadata = true;
+                        if (fallbackRetry?.response?.ok && fallbackRetry?.data?.hasError !== true) {
+                            response = fallbackRetry.response;
+                            data = fallbackRetry.data;
+                        } else {
+                            response = metadataRetry?.response || fallbackRetry?.response || response;
+                            data = metadataRetry?.data || fallbackRetry?.data || data;
+                        }
+                    } else {
+                        response = metadataRetry?.response || response;
+                        data = metadataRetry?.data || data;
+                    }
+                }
+                if (!retriedWithoutMetadata && shouldRetryWithoutMetadata && Number(response?.status || 0) === 400) {
+                    const fallbackRetry = await requestSunizeCreate(gatewayConfig, sunizePayloadBase);
+                    retriedWithoutMetadata = true;
+                    if (fallbackRetry?.response?.ok && fallbackRetry?.data?.hasError !== true) {
+                        response = fallbackRetry.response;
+                        data = fallbackRetry.data;
+                    } else {
+                        response = fallbackRetry?.response || response;
+                        data = fallbackRetry?.data || data;
+                    }
+                }
+                if (!response?.ok) {
+                    createInflightError = new Error('sunize_create_failed');
+                    return res.status(response?.status || 502).json({
+                        error: 'Falha ao gerar o PIX.',
+                        detail: data
+                    });
+                }
+                if (data?.hasError === true) {
+                    createInflightError = new Error('sunize_create_error');
+                    return res.status(502).json({
+                        error: 'Falha ao gerar o PIX.',
+                        detail: data
+                    });
+                }
+
+                const sunizeData = resolveSunizeResponse(data);
+                txid = sunizeData.txid;
+                paymentCode = sunizeData.paymentCode;
+                paymentCodeBase64 = sunizeData.paymentCodeBase64;
+                paymentQrUrl = sunizeData.paymentQrUrl;
+                statusRaw = sunizeData.status;
+                externalId = sunizeData.externalId || externalId;
+            } else if (gateway === 'paradise') {
+                if (!hasParadiseCredentials(gatewayConfig)) {
+                    createInflightError = new Error('paradise_missing_credentials');
+                    return res.status(500).json({ error: 'Credenciais Paradise nao configuradas.' });
+                }
+
+                const paradiseReferenceBase = upsellEnabled ? `${orderId}-upsell` : orderId;
+                externalId = `${paradiseReferenceBase}-${Date.now()}`;
+
+                const paradisePayload = {
+                    amount: Math.max(1, Math.round(totalAmount * 100)),
+                    description: String(
+                        gatewayConfig.description ||
+                        (upsellEnabled ? 'Pedido iFood Bag - Upsell' : 'Pedido iFood Bag')
+                    ).trim(),
+                    reference: externalId,
+                    customer: {
+                        name,
+                        email,
+                        document: cpf,
+                        phone
+                    },
+                    postback_url: resolveParadisePostbackUrl(req, gatewayConfig),
+                    tracking: {
+                        gateway: 'paradise',
+                        orderId,
+                        sessionId: sessionId || orderId,
+                        utm_source: rawBody?.utm?.utm_source || '',
+                        utm_medium: rawBody?.utm?.utm_medium || '',
+                        utm_campaign: rawBody?.utm?.utm_campaign || '',
+                        utm_term: rawBody?.utm?.utm_term || '',
+                        utm_content: rawBody?.utm?.utm_content || '',
+                        src: rawBody?.utm?.src || '',
+                        sck: rawBody?.utm?.sck || '',
+                        fbclid: rawBody?.utm?.fbclid || rawBody?.fbclid || '',
+                        gclid: rawBody?.utm?.gclid || '',
+                        ttclid: rawBody?.utm?.ttclid || ''
+                    }
+                };
+                if (String(gatewayConfig.productHash || '').trim()) {
+                    paradisePayload.productHash = String(gatewayConfig.productHash).trim();
+                } else {
+                    paradisePayload.source = String(gatewayConfig.source || 'api_externa').trim() || 'api_externa';
+                }
+                if (normalizedBump.selected && String(gatewayConfig.orderbumpHash || '').trim()) {
+                    paradisePayload.orderbump = String(gatewayConfig.orderbumpHash).trim();
+                }
+
+                ({ response, data } = await requestParadiseCreate(gatewayConfig, paradisePayload));
+                if (!response?.ok || data?.success === false || String(data?.status || '').toLowerCase() === 'error') {
+                    createInflightError = new Error('paradise_create_failed');
+                    return res.status(response?.status || 502).json({
+                        error: 'Falha ao gerar o PIX.',
+                        detail: data
+                    });
+                }
+
+                const paradiseData = resolveParadiseResponse(data);
+                txid = paradiseData.txid;
+                paymentCode = paradiseData.paymentCode;
+                paymentCodeBase64 = paradiseData.paymentCodeBase64;
+                paymentQrUrl = paradiseData.paymentQrUrl;
+                statusRaw = paradiseData.status || getParadiseStatus(data);
+                externalId = paradiseData.externalId || externalId;
+
+                if (txid && !paymentCode && !paymentCodeBase64 && !paymentQrUrl) {
+                    const quickStatusTimeout = Math.max(
+                        650,
+                        Math.min(Number(gatewayConfig.timeoutMs || 12000), 900)
+                    );
+                    const quickConfig = {
+                        ...gatewayConfig,
+                        timeoutMs: quickStatusTimeout
+                    };
+                    const quickStatus = await requestParadiseStatus(quickConfig, txid).catch(() => ({
+                        response: { ok: false },
+                        data: {}
+                    }));
+                    if (quickStatus?.response?.ok) {
+                        const fromStatus = resolveParadiseResponse(quickStatus.data || {});
+                        paymentCode = paymentCode || fromStatus.paymentCode;
+                        paymentCodeBase64 = paymentCodeBase64 || fromStatus.paymentCodeBase64;
+                        paymentQrUrl = paymentQrUrl || fromStatus.paymentQrUrl;
+                        statusRaw = statusRaw || fromStatus.status;
+                    }
+                }
+            } else if (gateway === 'atomopay') {
+                if (!hasAtomopayCredentials(gatewayConfig)) {
+                    createInflightError = new Error('atomopay_missing_credentials');
+                    return res.status(500).json({ error: 'Credenciais Atomopay nao configuradas.' });
+                }
+
+                const atomopayReferenceBase = upsellEnabled ? `${orderId}-upsell` : orderId;
+                externalId = `${atomopayReferenceBase}-${Date.now()}`;
+
+                const atomopayPayload = {
+                    amount: Math.max(1, Math.round(totalAmount * 100)),
+                    payment_method: 'pix',
+                    customer: {
+                        name,
+                        email,
+                        document: cpf,
+                        phone
+                    },
+                    expire_in_days: 1,
+                    transaction_origin: 'api',
+                    postback_url: resolveAtomopayPostbackUrl(req, gatewayConfig),
+                    metadata: {
+                        gateway: 'atomopay',
+                        orderId,
+                        sessionId: sessionId || orderId,
+                        utm_source: rawBody?.utm?.utm_source || '',
+                        utm_medium: rawBody?.utm?.utm_medium || '',
+                        utm_campaign: rawBody?.utm?.utm_campaign || '',
+                        utm_term: rawBody?.utm?.utm_term || '',
+                        utm_content: rawBody?.utm?.utm_content || '',
+                        src: rawBody?.utm?.src || '',
+                        sck: rawBody?.utm?.sck || '',
+                        fbclid: rawBody?.utm?.fbclid || rawBody?.fbclid || '',
+                        gclid: rawBody?.utm?.gclid || '',
+                        ttclid: rawBody?.utm?.ttclid || ''
+                    }
+                };
+
+                if (String(gatewayConfig.offerHash || '').trim()) {
+                    atomopayPayload.offer_hash = String(gatewayConfig.offerHash).trim();
+                }
+
+                ({ response, data } = await requestAtomopayCreate(gatewayConfig, atomopayPayload));
+                if (!response?.ok) {
+                    createInflightError = new Error('atomopay_create_failed');
+                    return res.status(response?.status || 502).json({
+                        error: 'Falha ao gerar o PIX.',
+                        detail: data
+                    });
+                }
+
+                const atomopayData = resolveAtomopayResponse(data);
+                txid = atomopayData.txid;
+                paymentCode = atomopayData.paymentCode;
+                paymentCodeBase64 = atomopayData.paymentCodeBase64;
+                paymentQrUrl = atomopayData.paymentQrUrl;
+                statusRaw = atomopayData.status;
+                externalId = atomopayData.externalId || externalId;
+
+            } else {
+                const ativusAuthConfigured = Boolean(
+                    String(gatewayConfig.apiKeyBase64 || '').trim() ||
+                    String(gatewayConfig.apiKey || '').trim()
+                );
+                if (!ativusAuthConfigured) {
+                    createInflightError = new Error('ativushub_missing_credentials');
+                    return res.status(500).json({ error: 'API Key da AtivusHUB nao configurada.' });
+                }
+
+            const sellerId = await getAtivushubSellerId(gatewayConfig);
+            const ativusPayload = {
+                amount: totalAmount,
+                id_seller: sellerId,
+                customer: {
+                    name,
+                    email,
+                    cpf,
+                    phone,
+                    externaRef: orderId,
+                    address: {
+                        street,
+                        streetNumber,
+                        complement,
+                        zipCode,
+                        neighborhood,
+                        city,
+                        state,
+                        country: 'br'
+                    }
+                },
+                checkout: {
+                    utm_source: rawBody?.utm?.utm_source || '',
+                    utm_medium: rawBody?.utm?.utm_medium || '',
+                    utm_campaign: rawBody?.utm?.utm_campaign || '',
+                    utm_term: rawBody?.utm?.utm_term || '',
+                    utm_content: rawBody?.utm?.utm_content || '',
+                    src: rawBody?.utm?.src || '',
+                    sck: rawBody?.utm?.sck || ''
+                },
+                items,
+                postbackUrl: resolveAtivushubPostbackUrl(req, gatewayConfig),
+                ip: extractIp(req),
+                metadata: {
+                    gateway: 'ativushub',
+                    orderId,
+                    shippingId: normalizedShipping?.id || '',
+                    shippingName: normalizedShipping?.name || '',
+                    cep: zipCode,
+                    reference: extra?.reference || '',
+                    bumpSelected: normalizedBump.selected,
+                    bumpPrice: normalizedBump.price,
+                    upsellEnabled,
+                    upsellKind: upsellEnabled ? String(upsell?.kind || 'frete_1dia') : '',
+                    upsellTitle: upsellEnabled ? String(upsell?.title || 'Prioridade de envio') : '',
+                    upsellPrice: upsellEnabled ? Number(upsell?.price || 0) : 0,
+                    previousTxid: upsellEnabled ? String(upsell?.previousTxid || '') : ''
+                },
+                pix: {
+                    expiresInDays: 2
+                }
+            };
+
+                ({ response, data } = await requestAtivushubCreate(gatewayConfig, ativusPayload));
+                if (!response?.ok) {
+                    createInflightError = new Error('ativushub_create_failed');
+                    return res.status(response?.status || 502).json({
+                        error: 'Falha ao gerar o PIX.',
+                        detail: data
+                    });
+                }
+
+                txid = String(data?.idTransaction || data?.idtransaction || '').trim();
+                paymentCode = String(data?.paymentCode || data?.paymentcode || '').trim();
+                paymentCodeBase64 = String(data?.paymentCodeBase64 || data?.paymentcodebase64 || '').trim();
+                statusRaw = String(data?.status_transaction || data?.status || '').trim();
+
+                const ativusError = pickAtivusCreateError(data);
+                if (!txid && (ativusError.code || ativusError.message)) {
+                    createInflightError = new Error(`ativushub_create_business_error:${ativusError.code || 'unknown'}`);
+                    return res.status(mapAtivusErrorCodeToHttpStatus(ativusError.code, response?.status || 502)).json({
+                        error: ativusError.message || 'Falha ao gerar o PIX.',
+                        detail: data
+                    });
+                }
+            }
+
+            if (!txid) {
+                createInflightError = new Error('missing_txid');
+                return res.status(502).json({
+                    error: 'Gateway retornou PIX sem identificador de transacao.',
+                    detail: data
+                });
+            }
+
+            const pixCreatedAt = new Date().toISOString();
+
+            await upsertLead({
+                ...(rawBody || {}),
+                addPaymentInfoEventId,
+                shipping: normalizedShipping,
+                reward: normalizedReward,
+                bump: normalizedBump,
+                rewardId: normalizedReward.id,
+                rewardName: normalizedReward.name,
+                rewardExtraPrice,
+                gateway,
+                pixGateway: gateway,
+                paymentGateway: gateway,
+                event: upsellEnabled ? 'upsell_pix_created' : 'pix_created',
+                stage: upsellEnabled ? 'upsell' : 'pix',
+                pixTxid: txid,
+                pixAmount: totalAmount,
+                pixCreatedAt,
+                pixStatusChangedAt: pixCreatedAt,
+                pixStatus: statusRaw || 'waiting_payment',
+                // A new PIX must clear terminal markers from any previous transaction in the same session.
+                pixPaidAt: null,
+                pixRefundedAt: null,
+                pixRefusedAt: null,
+                pixExternalId: externalId || undefined,
+                paymentCode: paymentCode || undefined,
+                paymentCodeBase64: paymentCodeBase64 || undefined,
+                paymentQrUrl: paymentQrUrl || undefined,
+                pix: {
+                    ...asObject(rawBody?.pix),
+                    idTransaction: txid,
+                    paymentCode,
+                    paymentCodeBase64,
+                    paymentQrUrl,
+                    status: statusRaw || 'waiting_payment',
+                    gateway,
+                    amount: totalAmount,
+                    createdAt: pixCreatedAt,
+                    paidAt: null,
+                    refundedAt: null,
+                    refusedAt: null,
+                    externalId: externalId || undefined,
+                    rewardId: normalizedReward.id,
+                    rewardName: normalizedReward.name,
+                    rewardExtraPrice
+                },
+                upsell: upsellEnabled ? {
+                    enabled: true,
+                    kind: String(upsell?.kind || 'frete_1dia'),
+                    title: String(upsell?.title || 'Prioridade de envio'),
+                    price: Number(upsell?.price || totalAmount),
+                    previousTxid: String(upsell?.previousTxid || '')
+                } : null
+            }, req).catch(() => null);
+
+            const utmOrderId = txid || orderId;
+            const utmJob = {
+                channel: 'utmfy',
+                eventName: upsellEnabled ? 'upsell_pix_created' : 'pix_created',
+                dedupeKey: txid ? `utmfy:pix_created:${gateway}:${upsellEnabled ? 'upsell' : 'base'}:${txid}` : null,
+                payload: {
+                    orderId: utmOrderId,
+                    eventId: addPaymentInfoEventId,
+                    amount: totalAmount,
+                    sessionId: sessionId || '',
+                    personal,
+                    shipping: normalizedShipping,
+                    reward: normalizedReward,
+                    bump: normalizedBump.selected ? normalizedBump : null,
+                    utm: rawBody.utm || {},
+                    txid,
+                    gateway,
+                    createdAt: pixCreatedAt,
+                    status: 'waiting_payment',
+                    upsell: upsellEnabled ? {
+                        enabled: true,
+                        kind: String(upsell?.kind || 'frete_1dia'),
+                        title: String(upsell?.title || 'Prioridade de envio'),
+                        price: Number(upsell?.price || totalAmount)
+                    } : null
+                }
+            };
+            const pixelJob = {
+                channel: 'pixel',
+                eventName: upsellEnabled ? 'upsell_pix_created' : 'pix_created',
+                dedupeKey: txid ? `pixel:pix_created:${gateway}:${upsellEnabled ? 'upsell' : 'base'}:${txid}` : null,
+                payload: {
+                    orderId: utmOrderId,
+                    txid,
+                    amount: totalAmount,
+                    personal,
+                    utm: rawBody.utm || {},
+                    sourceUrl: rawBody?.sourceUrl || null,
+                    client_ip: req?.headers?.['x-forwarded-for']
+                        ? String(req.headers['x-forwarded-for']).split(',')[0].trim()
+                        : req?.socket?.remoteAddress || '',
+                    user_agent: req?.headers?.['user-agent'] || '',
+                    fbc: rawBody?.utm?.fbclid || null,
+                    fbp: rawBody?.fbp || null
+                }
+            };
+            const pushPayload = {
+                txid,
+                orderId: utmOrderId,
+                amount: totalAmount,
+                customerName: name,
+                customerEmail: email,
+                shippingName: normalizedShipping?.name || '',
+                rewardId: normalizedReward.id,
+                rewardName: normalizedReward.name,
+                rewardExtraPrice,
+                cep: zipCode,
+                utm: rawBody.utm || {},
+                utm_source: rawBody?.utm?.utm_source || rawBody?.utm_source || '',
+                utm_campaign: rawBody?.utm?.utm_campaign || rawBody?.utm_campaign || '',
+                utm_term: rawBody?.utm?.utm_term || rawBody?.utm_term || '',
+                utm_content: rawBody?.utm?.utm_content || rawBody?.utm_content || '',
+                campaign: rawBody?.utm?.utm_campaign || rawBody?.utm_campaign || '',
+                adset: (
+                    rawBody?.utm?.utm_adset ||
+                    rawBody?.utm?.adset ||
+                    rawBody?.utm?.utm_content ||
+                    rawBody?.utm_adset ||
+                    rawBody?.utm_content ||
+                    ''
+                ),
+                gateway,
+                isUpsell: upsellEnabled
+            };
+            const pushKind = upsellEnabled ? 'upsell_pix_created' : 'pix_created';
+            const pushJob = {
+                channel: 'pushcut',
+                kind: pushKind,
+                dedupeKey: txid ? `pushcut:pix_created:${gateway}:${txid}` : null,
+                payload: pushPayload
+            };
+
+            const [utmQueued, pushQueued, pixelQueued] = await Promise.all([
+                enqueueDispatch(utmJob).catch(() => null),
+                enqueueDispatch(pushJob).catch(() => null),
+                enqueueDispatch(pixelJob).catch(() => null)
+            ]);
+            const shouldProcessQueue = Boolean(
+                utmQueued?.ok || utmQueued?.fallback ||
+                pushQueued?.ok || pushQueued?.fallback ||
+                pixelQueued?.ok || pixelQueued?.fallback
+            );
+
+            const responsePayload = {
+                idTransaction: txid,
+                paymentCode,
+                paymentCodeBase64,
+                paymentQrUrl,
+                status: statusRaw || '',
+                amount: totalAmount,
+                gateway,
+                externalId,
+                rewardId: normalizedReward.id,
+                rewardName: normalizedReward.name,
+                rewardExtraPrice
+            };
+            createInflightResult = responsePayload;
+            res.status(200).json(responsePayload);
+
+            // Jobs are enqueued before response; queue processing runs asynchronously.
+            (async () => {
+                if (shouldProcessQueue) {
+                    await processDispatchQueue(12).catch(() => null);
+                }
+            })().catch((error) => {
+                console.error('[pix] side effect error', { message: error?.message || String(error) });
+            });
+
+            return;
+        } finally {
+            if (createInflightEntry) {
+                if (createInflightResult) {
+                    finishPixCreateInflight(pixCreateInflightKey, createInflightEntry, {
+                        ok: true,
+                        payload: createInflightResult
+                    });
+                } else {
+                    finishPixCreateInflight(
+                        pixCreateInflightKey,
+                        createInflightEntry,
+                        null,
+                        createInflightError || new Error('pix_create_not_completed')
+                    );
+                }
+            }
+        }
+    } catch (error) {
+        console.error('[pix] unexpected error', { message: error.message || String(error) });
+        return res.status(500).json({
+            error: 'Erro ao gerar o PIX.',
+            detail: error.message || String(error)
+        });
+    }
+};

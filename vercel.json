@@ -1,0 +1,73 @@
+{
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "crons": [
+        {
+            "path": "/api/jobs/dispatch",
+            "schedule": "0 3 * * *"
+        }
+    ],
+    "headers": [
+        {
+            "source": "/assets/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=31536000, immutable"
+                }
+            ]
+        },
+        {
+            "source": "/(.*)\\.html",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=0, s-maxage=60, stale-while-revalidate=600"
+                },
+                {
+                    "key": "X-Frame-Options",
+                    "value": "DENY"
+                },
+                {
+                    "key": "X-Content-Type-Options",
+                    "value": "nosniff"
+                },
+                {
+                    "key": "Referrer-Policy",
+                    "value": "strict-origin-when-cross-origin"
+                },
+                {
+                    "key": "Permissions-Policy",
+                    "value": "camera=(), microphone=(), geolocation=()"
+                },
+                {
+                    "key": "X-Robots-Tag",
+                    "value": "noindex, nofollow, noarchive, nosnippet"
+                }
+            ]
+        }
+    ],
+    "rewrites": [
+        { "source": "/api/admin/:route*", "destination": "/api/admin?route=:route*" },
+        { "source": "/home", "destination": "/home.html" },
+        { "source": "/admin/tracking", "destination": "/admin-tracking" },
+        { "source": "/admin/utmfy", "destination": "/admin-utmfy" },
+        { "source": "/admin/gateways", "destination": "/admin-gateways" },
+        { "source": "/admin/pages", "destination": "/admin-pages" },
+        { "source": "/admin/backredirects", "destination": "/admin-backredirects" },
+        { "source": "/admin/leads", "destination": "/admin-leads" },
+        { "source": "/admin", "destination": "/admin.html" },
+        { "source": "/quiz", "destination": "/quiz.html" },
+        { "source": "/dados", "destination": "/dados.html" },
+        { "source": "/endereco", "destination": "/endereco.html" },
+        { "source": "/processando", "destination": "/processando.html" },
+        { "source": "/sucesso", "destination": "/sucesso.html" },
+        { "source": "/checkout", "destination": "/checkout.html" },
+        { "source": "/orderbump", "destination": "/orderbump.html" },
+        { "source": "/pix", "destination": "/pix.html" },
+        { "source": "/upsell-iof", "destination": "/upsell-iof.html" },
+        { "source": "/upsell-correios", "destination": "/upsell-correios.html" },
+        { "source": "/upsell", "destination": "/upsell.html" },
+        { "source": "/verificacao", "destination": "/index.html" }
+    ]
+}

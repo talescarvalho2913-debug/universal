@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#111111" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111111" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Igreja Universal - UTMfy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css?v=3.6" />
+<script src="/backguard.js?v=1.5"></script>
+</head>
+<body data-page="admin" data-admin="utmfy">
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <div class="admin-brand">
+        <h2 style="color: #D4AF37; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.8rem; margin: 0; letter-spacing: 2px;">IGREJA UNIVERSAL</h2>
+        <div>
+          <strong>Dashboard</strong>
+          <span>Entregadores</span>
+        </div>
+      </div>
+      <nav class="admin-nav">
+        <a class="admin-nav-item" data-admin="overview" href="/admin">Visao geral</a>
+        <a class="admin-nav-item" data-admin="tracking" href="/admin-tracking">Tracking</a>
+        <a class="admin-nav-item" data-admin="utmfy" href="/admin-utmfy">UTMfy</a>
+        <a class="admin-nav-item" data-admin="gateways" href="/admin-gateways">Gateways</a>
+        <a class="admin-nav-item" data-admin="pages" href="/admin-pages">Paginas</a>
+        <a class="admin-nav-item" data-admin="backredirects" href="/admin-backredirects">Backredirects</a>
+        <a class="admin-nav-item" data-admin="leads" href="/admin-leads">Leads</a>
+      </nav>
+      <div class="admin-sidebar-foot">
+        <span class="admin-pill">Seguro</span>
+        <span class="admin-muted">Painel privado</span>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-topbar">
+        <div>
+          <h1>UTMfy</h1>
+          <p>Ative webhooks, conecte campanhas externas e centralize a atribuicao.</p>
+        </div>
+        <div class="admin-topbar-actions">
+          <button id="admin-save" class="btn-primary" type="button">Salvar configuracoes</button>
+          <span id="admin-save-status" class="admin-muted"></span>
+        </div>
+      </header>
+
+      <section id="admin-login" class="admin-login-card">
+        <h2>Acesso restrito</h2>
+        <p class="admin-muted">Digite sua senha para acessar o painel.</p>
+        <div class="input-group">
+          <input type="password" id="admin-password" class="floating-input" placeholder=" " autocomplete="current-password" />
+          <label for="admin-password" class="floating-label">Senha do admin</label>
+        </div>
+        <button id="admin-login-btn" class="btn-primary" type="button">Entrar</button>
+        <div id="admin-login-error" class="form-error hidden"></div>
+      </section>
+
+      <div id="admin-panel" class="admin-panel hidden">
+        <section id="admin-utmfy" class="admin-section admin-section--card">
+          <div class="admin-section-header">
+            <h2>UTMfy</h2>
+            <span class="admin-chip">Webhooks</span>
+          </div>
+          <p class="admin-hint">Envie eventos padronizados para acompanhar campanhas externas.</p>
+          <div class="admin-grid">
+            <label class="admin-switch">
+              <input type="checkbox" id="utmfy-enabled" />
+              <span>Enviar eventos</span>
+            </label>
+            <div class="input-group">
+              <input type="text" id="utmfy-endpoint" class="floating-input" placeholder=" " />
+              <label for="utmfy-endpoint" class="floating-label">Endpoint UTMfy</label>
+            </div>
+            <div class="input-group">
+              <input type="password" id="utmfy-api" class="floating-input" placeholder=" " />
+              <label for="utmfy-api" class="floating-label">Token (opcional)</label>
+            </div>
+            <div class="input-group">
+              <input type="text" id="utmfy-platform" class="floating-input" placeholder=" " />
+              <label for="utmfy-platform" class="floating-label">Plataforma (ex: yampi, cartpanda, woocommerce, IfoodBag)</label>
+            </div>
+          </div>
+        </section>
+
+        <section class="admin-section admin-section--card">
+          <div class="admin-section-header">
+            <h2>Teste rapido</h2>
+            <span class="admin-chip">UTMfy</span>
+          </div>
+          <p class="admin-hint">Envia um evento teste para o webhook configurado.</p>
+          <div class="admin-inline-actions">
+            <button id="admin-test-utmfy" class="btn-secondary" type="button">Enviar evento teste</button>
+            <span id="admin-test-utmfy-status" class="admin-muted"></span>
+          </div>
+        </section>
+
+        <section class="admin-section admin-section--card">
+          <div class="admin-section-header">
+            <h2>Venda manual</h2>
+            <span class="admin-chip">R$ 56,10</span>
+          </div>
+          <p class="admin-hint">Dispara uma venda manual para contabilizar no UTMfy.</p>
+          <div class="admin-inline-actions">
+            <button id="admin-sale-utmfy" class="btn-primary" type="button">Enviar venda R$ 56,10</button>
+            <span id="admin-sale-utmfy-status" class="admin-muted"></span>
+          </div>
+        </section>
+
+        <section class="admin-section admin-section--card pushcut-settings">
+          <div class="admin-section-header">
+            <h2>Pushcut</h2>
+            <span class="admin-chip">Notificacoes</span>
+          </div>
+          <p class="admin-hint">Configure um endpoint para PIX gerado e outro para pagamento confirmado.</p>
+          <div class="pushcut-settings__top">
+            <label class="admin-switch">
+              <input type="checkbox" id="pushcut-enabled" />
+              <span>Pushcut ativo</span>
+            </label>
+          </div>
+          <div class="pushcut-settings__grid">
+            <article class="pushcut-card">
+              <h3>PIX gerado</h3>
+              <p class="admin-hint">Dispara quando um novo PIX e criado.</p>
+              <div class="input-group">
+                <input type="url" id="pushcut-pix-created" class="floating-input" placeholder=" " />
+                <label for="pushcut-pix-created" class="floating-label">URL PIX gerado</label>
+              </div>
+            </article>
+
+            <article class="pushcut-card">
+              <h3>PIX pago</h3>
+              <p class="admin-hint">Dispara quando o pagamento e confirmado.</p>
+              <div class="input-group">
+                <input type="url" id="pushcut-pix-confirmed" class="floating-input" placeholder=" " />
+                <label for="pushcut-pix-confirmed" class="floating-label">URL pagamento confirmado</label>
+              </div>
+            </article>
+          </div>
+          <div class="pushcut-templates">
+            <div class="admin-section-header">
+              <h3>Mensagens Pushcut</h3>
+              <span class="admin-chip">Templates</span>
+            </div>
+            <p class="admin-hint">Defina titulo e texto para cada evento.</p>
+            <div class="pushcut-templates__grid">
+              <div class="input-group">
+                <input type="text" id="pushcut-created-title" class="floating-input" placeholder=" " />
+                <label for="pushcut-created-title" class="floating-label">Titulo PIX gerado</label>
+              </div>
+              <div class="input-group">
+                <input type="text" id="pushcut-confirmed-title" class="floating-input" placeholder=" " />
+                <label for="pushcut-confirmed-title" class="floating-label">Titulo PIX pago</label>
+              </div>
+              <div class="input-group">
+                <textarea id="pushcut-created-message" class="floating-input floating-input--textarea" placeholder=" "></textarea>
+                <label for="pushcut-created-message" class="floating-label">Mensagem PIX gerado</label>
+              </div>
+              <div class="input-group">
+                <textarea id="pushcut-confirmed-message" class="floating-input floating-input--textarea" placeholder=" "></textarea>
+                <label for="pushcut-confirmed-message" class="floating-label">Mensagem PIX pago</label>
+              </div>
+            </div>
+          </div>
+          <div class="pushcut-placeholders">
+            <span class="pushcut-placeholders__item"><code>{amount}</code></span>
+            <span class="pushcut-placeholders__item"><code>{name}</code></span>
+            <span class="pushcut-placeholders__item"><code>{orderId}</code></span>
+            <span class="pushcut-placeholders__item"><code>{txid}</code></span>
+            <span class="pushcut-placeholders__item"><code>{status}</code></span>
+            <span class="pushcut-placeholders__item"><code>{cep}</code></span>
+            <span class="pushcut-placeholders__item"><code>{campaign}</code></span>
+            <span class="pushcut-placeholders__item"><code>{adset}</code></span>
+          </div>
+          <p class="admin-hint">Placeholders disponiveis tambem em alias: <code>{campaignName}</code> e <code>{adsetName}</code>.</p>
+          <div class="admin-inline-actions">
+            <button id="admin-test-pushcut" class="btn-secondary" type="button">Testar Pushcut</button>
+            <span id="admin-test-pushcut-status" class="admin-muted"></span>
+          </div>
+        </section>
+
+        <section class="admin-section admin-section--card">
+          <div class="admin-section-header">
+            <h2>Fila backend</h2>
+            <span class="admin-chip">Dispatch</span>
+          </div>
+          <p class="admin-hint">Processa fila server-side de UTMfy e Pushcut.</p>
+          <div class="admin-inline-actions">
+            <button id="admin-process-dispatch" class="btn-secondary" type="button">Processar fila agora</button>
+            <span id="admin-process-dispatch-status" class="admin-muted"></span>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script src="/script.js?v=8.9" defer></script>
+</body>
+</html>
+
+
+
+
+
+
