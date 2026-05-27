@@ -111,27 +111,8 @@
                 if (pixPending) return '/pix';
                 if (pixPaid) return resolvePaidPixTarget(pix) || '/upsell-iof';
                 if (onOrderbump && isShippingSelectionComplete(shipping)) {
-                    try {
-                        var coupon = parseStorageJson('ifoodbag.coupon') || null;
-                        var amountOff = Number(coupon && coupon.amountOff ? coupon.amountOff : 0);
-                        var discountRate = Number(coupon && coupon.discount ? coupon.discount : 0);
-                        var couponValue = amountOff > 0
-                            ? amountOff
-                            : (discountRate > 0 ? Math.round((25.9 * discountRate) * 100) / 100 : 0);
-                        if (couponValue <= 0 && window.localStorage) {
-                            window.localStorage.setItem('ifoodbag.coupon', JSON.stringify({
-                                code: 'FRETE5',
-                                amountOff: 5,
-                                appliedAt: Date.now(),
-                                source: 'orderbump_back_auto',
-                                backOfferLevel: 1
-                            }));
-                        }
-                        if (window.sessionStorage) {
-                            window.sessionStorage.setItem('ifoodbag.orderbumpBackAutoPix', '1');
-                        }
-                    } catch (_error3) {
-                        // Ignore session storage restrictions.
+                    if (window.sessionStorage) {
+                        try { window.sessionStorage.setItem('ifoodbag.orderbumpBackAutoPix', '1'); } catch (e) {}
                     }
                     return '/pix';
                 }

@@ -5240,12 +5240,7 @@ function saveCoupon(data) {
 }
 
 function loadCoupon() {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEYS.coupon);
-        return raw ? JSON.parse(raw) : null;
-    } catch (error) {
-        return null;
-    }
+    return null;
 }
 
 function clearCoupon() {
