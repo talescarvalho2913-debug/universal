@@ -48,7 +48,6 @@
         }
     ],
     "rewrites": [
-        { "source": "/api/admin/:route*", "destination": "/api/admin?route=:route*" },
         { "source": "/home", "destination": "/home.html" },
         { "source": "/admin/tracking", "destination": "/admin-tracking" },
         { "source": "/admin/utmfy", "destination": "/admin-utmfy" },
