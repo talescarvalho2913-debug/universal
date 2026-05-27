@@ -40,11 +40,12 @@ const questions = {
     },
     retirada_kit: {
         id: 'retirada_kit',
-        text: 'Qual o melhor período do dia para os Correios entregarem o seu Kit Bíblico na sua residência?',
+        text: 'Qual área da sua vida você mais busca fortalecer espiritualmente neste momento?',
         options: [
-            { text: 'Manhã (08h às 12h)', icon: '☀️', next: 'personal_step' },
-            { text: 'Tarde (12h às 18h)', icon: '⛅', next: 'personal_step' },
-            { text: 'Qualquer horário (comercial)', icon: '🚚', next: 'personal_step' }
+            { text: 'Família e União do Lar', icon: '🏠', next: 'personal_step' },
+            { text: 'Saúde e Força Interior', icon: '🛡️', next: 'personal_step' },
+            { text: 'Prosperidade e Carreira', icon: '💼', next: 'personal_step' },
+            { text: 'Paz de Espírito e Comunhão com Deus', icon: '🕊️', next: 'personal_step' }
         ]
     }
 };
