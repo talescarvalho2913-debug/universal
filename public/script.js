@@ -1260,8 +1260,8 @@ function initCep() {
             redirect('checkout.html');
             return;
         }
-        setStage('processing');
-        redirect('processando.html');
+        setStage('checkout');
+        redirect('checkout.html');
     });
 
     focusFirstControl(document.querySelector('.step'));
@@ -3363,7 +3363,7 @@ function buildBackRedirectUrl(pageOverride) {
         return withDirectMode('checkout.html');
     };
     const directProcessingUrl = () => {
-        return withDirectMode('processando.html');
+        return withDirectMode('checkout.html');
     };
 
     const page = pageOverride || document.body?.dataset?.page || '';
@@ -3385,14 +3385,14 @@ function buildBackRedirectUrl(pageOverride) {
     const hasPix = !!pix;
     const hasAnyFunnelProgress = hasPersonalCore || hasAddress || hasShipping || hasPix;
     const canOpenVsl = hasPersonalCore && hasAddress;
-    const mustShowVslFirst = !isVslCompleted();
+    const mustShowVslFirst = false;
 
     if (page === 'home' && !hasAnyFunnelProgress) {
         return 'quiz.html';
     }
 
     if (mustShowVslFirst) {
-        return canOpenVsl ? 'processando.html' : directProcessingUrl();
+        return canOpenVsl ? 'checkout.html' : directCheckoutUrl();
     }
 
     if (pixPending) {
@@ -3467,7 +3467,7 @@ function buildBackRedirectFallbackUrl(pageOverride) {
         case 'personal':
             return withParams('endereco.html');
         case 'cep':
-            return withParams('processando.html');
+            return withParams('checkout.html');
         case 'processing':
             return withParams('sucesso.html');
         case 'success':
