@@ -649,7 +649,7 @@ body[data-page='success'] .success-reward-card.is-selected {
 
 body[data-page='success'] .success-reward-media {
     width: 100%;
-    min-height: 150px;
+    min-height: 240px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -657,7 +657,7 @@ body[data-page='success'] .success-reward-media {
 
 body[data-page='success'] .success-reward-image {
     max-width: 100%;
-    max-height: 150px;
+    max-height: 240px;
     object-fit: contain;
     object-position: center;
 }
@@ -713,11 +713,11 @@ body[data-page='success'] #btn-checkout:disabled {
     }
 
     body[data-page='success'] .success-reward-media {
-        min-height: 146px;
+        min-height: 220px;
     }
 
     body[data-page='success'] .success-reward-image {
-        max-height: 148px;
+        max-height: 220px;
     }
 
     body[data-page='success'] [data-reward-id='kit_entregador'] .success-reward-media {
@@ -4814,11 +4814,11 @@ body.modal-open {
     }
 
     body[data-page='success'] .success-reward-media {
-        min-height: 136px;
+        min-height: 200px;
     }
 
     body[data-page='success'] .success-reward-image {
-        max-height: 140px;
+        max-height: 200px;
     }
 
     body[data-page='success'] [data-reward-id='kit_entregador'] .success-reward-media {
