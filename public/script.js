@@ -2205,7 +2205,7 @@ function initOrderBump() {
     const neutralBump = {
         selected: false,
         price: 0,
-        title: 'Seguro Bag'
+        title: 'Doação Cesta Básica'
     };
     saveBump(neutralBump);
     setStage('orderbump');
@@ -2216,7 +2216,6 @@ function initOrderBump() {
         bump: neutralBump,
         amount: Number((Number(shipping?.price || 0) + rewardExtraPrice).toFixed(2))
     });
-    const bumpPrice = 19.9;
 
     isOrderBumpEnabled().then((enabled) => {
         if (!enabled) {
@@ -2236,32 +2235,44 @@ function initOrderBump() {
 
     const btnAccept = document.getElementById('btn-bump-accept');
     const btnDecline = document.getElementById('btn-bump-decline');
-    const bumpTotal = document.getElementById('bump-total');
-    const bumpMonthly = document.getElementById('bump-monthly');
     const bumpLoading = document.getElementById('bump-loading');
 
-    if (bumpTotal) bumpTotal.textContent = formatCurrency(shipping.price + rewardExtraPrice + bumpPrice);
-    if (bumpMonthly) bumpMonthly.textContent = formatCurrency(bumpPrice);
+    const donationOptions = document.querySelectorAll('.donation-option');
+    donationOptions.forEach(opt => {
+        opt.addEventListener('click', () => {
+            donationOptions.forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            const radio = opt.querySelector('input[type="radio"]');
+            if(radio) radio.checked = true;
+        });
+    });
+
+    const getDonationPrice = () => {
+        const checked = document.querySelector('input[name="donation_value"]:checked');
+        return checked ? Number(checked.value) : 25.00;
+    };
 
     const proceedToPix = (selected) => {
         if (btnAccept) btnAccept.disabled = true;
         if (btnDecline) btnDecline.disabled = true;
         if (bumpLoading) bumpLoading.classList.remove('hidden');
 
+        const bumpPrice = selected ? getDonationPrice() : 0;
+
         saveBump({
             selected,
             price: bumpPrice,
-            title: 'Seguro Bag'
+            title: 'Doação Cesta Básica'
         });
         trackLead(selected ? 'orderbump_accepted' : 'orderbump_declined', {
             stage: 'orderbump',
             bump: loadBump(),
             shipping,
             reward,
-            amount: Number((Number(shipping?.price || 0) + rewardExtraPrice + (selected ? bumpPrice : 0)).toFixed(2))
+            amount: Number((Number(shipping?.price || 0) + rewardExtraPrice + bumpPrice).toFixed(2))
         });
 
-        createPixCharge(shipping, selected ? bumpPrice : 0)
+        createPixCharge(shipping, bumpPrice)
             .catch((error) => {
                 showToast(error.message || 'Erro ao gerar o PIX. Tente novamente.', 'error');
                 if (btnAccept) btnAccept.disabled = false;
