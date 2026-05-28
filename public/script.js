@@ -5249,25 +5249,13 @@ function clearCoupon() {
 
 function buildShippingOptions(rawCep) {
     const coupon = loadCoupon();
-    const amountOff = Number(coupon?.amountOff || 0) || roundMoney(25.9 * Number(coupon?.discount || 0));
+    const amountOff = Number(coupon?.amountOff || 0) || roundMoney(10 * Number(coupon?.discount || 0));
     const baseOptions = [
-        {
-            id: 'economico',
-            name: 'Envio Econômico iFood',
-            price: 19.9,
-            eta: '5 a 8 dias úteis'
-        },
         {
             id: 'padrao',
             name: 'Envio Padrão iFood',
-            price: 25.9,
+            price: 10,
             eta: '3 a 5 dias úteis'
-        },
-        {
-            id: 'expresso',
-            name: 'Envio Prioritário iFood',
-            price: 29.9,
-            eta: '1 a 3 dias úteis'
         }
     ];
 
