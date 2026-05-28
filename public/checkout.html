@@ -13,8 +13,56 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.7">
+    <link rel="stylesheet" href="style.css?v=3.8">
     <script src="/backguard.js?v=1.6"></script>
+    <style>
+        /* Estilos Premium para a Página de Checkout */
+        body[data-page="checkout"] {
+            background: linear-gradient(135deg, #1A2B4C 0%, #061228 100%);
+            font-family: 'Outfit', sans-serif;
+            color: #2c3e50;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        body[data-page="checkout"] .checkout-headline h2, 
+        body[data-page="checkout"] .checkout-headline p {
+            color: #ffffff;
+        }
+        body[data-page="checkout"] .checkout-step {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            padding: clamp(16px, 4vw, 24px) 0;
+        }
+        body[data-page="checkout"] .checkout-main {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        body[data-page="checkout"] .freight-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+        }
+        body[data-page="checkout"] .summary-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: #f8fafc;
+        }
+        body[data-page="checkout"] .checkout-action-panel {
+            background: #ffffff;
+            border-radius: 14px;
+            margin-top: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        body[data-page="checkout"] .checkout-action-panel__top strong,
+        body[data-page="checkout"] .checkout-selected-shipping {
+            color: #061228;
+        }
+    </style>
 </head>
 
 <body data-page="checkout">
@@ -186,7 +234,7 @@
         <p style="margin: 0; font-size: 0.85rem; color: #a0aabf; text-align: center;">&copy; 2026 Igreja Universal. Todos os direitos reservados.</p>
     </footer>
 
-    <script src="script.js?v=9.1" defer></script>
+    <script src="script.js?v=9.2" defer></script>
 </body>
 
 </html>
