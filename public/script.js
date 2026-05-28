@@ -78,7 +78,7 @@ const REWARD_CATALOG = {
     bag: {
         id: 'bag',
         name: 'Kit Bíblico de Estudo Universal (Básico)',
-        asset: 'assets/universal_bible_kit.png',
+        asset: '/assets/universal_bible_kit.png',
         successOriginalPrice: 129.9,
         successDisplayPrice: 0,
         checkoutExtraPrice: 0,
@@ -88,7 +88,7 @@ const REWARD_CATALOG = {
     bau: {
         id: 'bau',
         name: 'Kit Bíblico Universal + Livro de Fé (Premium)',
-        asset: 'assets/universal_bible_kit.png',
+        asset: '/assets/universal_bible_kit.png',
         successOriginalPrice: 249.9,
         successDisplayPrice: 39.9,
         checkoutExtraPrice: 39.9,
@@ -98,7 +98,7 @@ const REWARD_CATALOG = {
     kit_entregador: {
         id: 'kit_entregador',
         name: 'Super Kit Família Cristã Completo',
-        asset: 'assets/universal_bible_kit.png',
+        asset: '/assets/universal_bible_kit.png',
         successOriginalPrice: 449.9,
         successDisplayPrice: 97.9,
         checkoutExtraPrice: 97.9,
