@@ -16,6 +16,46 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&family=Rawline:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=7.8">
     <script src="/backguard.js?v=1.6"></script>
+    <style>
+        body[data-page="pix"] {
+            background: linear-gradient(135deg, #1A2B4C 0%, #061228 100%) !important;
+            font-family: 'Outfit', sans-serif;
+            color: #2c3e50;
+            min-height: 100vh;
+        }
+        body[data-page="pix"] .step {
+            background: #ffffff !important;
+            border-radius: 24px !important;
+            box-shadow: 0 15px 35px rgba(6, 18, 40, 0.08) !important;
+            border-top: 4px solid #D4AF37 !important;
+            padding: 36px 28px !important;
+            margin-top: 40px !important;
+        }
+        body[data-page="pix"] .pix-topbar {
+            background: transparent !important;
+            border: none !important;
+            color: #1F1F1F !important;
+            padding: 0 !important;
+            justify-content: center !important;
+            margin-bottom: 20px;
+        }
+        body[data-page="pix"] .pix-heading {
+            color: #1F1F1F !important;
+        }
+        body[data-page="pix"] .pix-instructions {
+            color: #4A4A4A !important;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px !important;
+            }
+            body[data-page="pix"] .step {
+                border-radius: 24px !important;
+                margin-top: 16px !important;
+                padding: 24px 20px !important;
+            }
+        }
+    </style>
 </head>
 
 <body data-page="pix">
