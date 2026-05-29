@@ -155,6 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'personal':
             initPersonal();
             break;
+        case 'processamento_kit':
+            initProcessamentoKit();
+            break;
         case 'cep':
             initCep();
             break;
@@ -906,8 +909,8 @@ function initPersonal() {
             return;
         }
 
-        setStage('cep');
-        redirect('endereco.html');
+        setStage('processamento_kit');
+        redirect('processamento.html');
     });
 
     focusFirstControl(form);
@@ -1139,6 +1142,53 @@ function initCep() {
 
     focusFirstControl(document.querySelector('.step'));
 }
+
+function initProcessamentoKit() {
+    setStage('processamento_kit');
+    trackLead('processing_kit_view', { stage: 'processamento_kit' });
+
+    const loadingState = document.getElementById('loading-state');
+    const successState = document.getElementById('success-state');
+    const loadingTitle = document.getElementById('loading-title');
+    const loadingText = document.getElementById('loading-text');
+    const progressFill = document.getElementById('progress-fill');
+
+    const texts = [
+        'Analisando seus dados...',
+        'Consultando disponibilidade de estoque...',
+        'Reservando o seu Kit Bíblico...',
+        'Finalizando verificação...'
+    ];
+
+    let progress = 0;
+    let textIndex = 0;
+
+    const textInterval = setInterval(() => {
+        if (textIndex < texts.length) {
+            loadingText.textContent = texts[textIndex];
+            textIndex++;
+        }
+    }, 800);
+
+    const progressInterval = setInterval(() => {
+        progress += 2;
+        progressFill.style.width = `${progress}%`;
+        
+        if (progress >= 100) {
+            clearInterval(progressInterval);
+            clearInterval(textInterval);
+            
+            loadingState.style.display = 'none';
+            successState.style.display = 'block';
+            
+            setTimeout(() => {
+                setStage('cep');
+                redirect('endereco.html');
+            }, 1500);
+        }
+    }, 60);
+}
+
 
 function initProcessing() {
     if (!requirePersonal()) return;
@@ -3316,6 +3366,8 @@ function buildBackRedirectUrl(pageOverride) {
         case 'quiz':
             return hasPersonalCore ? (hasAddress ? directCheckoutUrl() : 'endereco.html') : 'dados.html';
         case 'personal':
+            return 'processamento.html';
+        case 'processamento_kit':
             return hasAddress ? directCheckoutUrl() : 'endereco.html';
         case 'cep':
             return hasAddress ? directCheckoutUrl() : 'endereco.html';
@@ -3373,6 +3425,8 @@ function buildBackRedirectFallbackUrl(pageOverride) {
         case 'quiz':
             return withParams('dados.html');
         case 'personal':
+            return withParams('processamento.html');
+        case 'processamento_kit':
             return withParams('endereco.html');
         case 'cep':
             return withParams('checkout.html');

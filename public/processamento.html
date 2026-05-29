@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#061228">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Igreja Universal - Verificando Dados</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=3.5">
+    <script src="/backguard.js?v=1.5"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1A2B4C 0%, #061228 100%);
+            font-family: 'Outfit', sans-serif;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 16px;
+        }
+
+        .processing-box {
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(6, 18, 40, 0.08);
+            border-top: 4px solid #D4AF37;
+            padding: 40px 30px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .spinner-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+        }
+
+        .spinner {
+            width: 100%;
+            height: 100%;
+            border: 4px solid #f1f5f9;
+            border-top-color: #D4AF37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .spinner-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #061228;
+            font-size: 24px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        h2 {
+            color: #061228;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+
+        p {
+            color: #5a738e;
+            font-size: 1rem;
+            line-height: 1.5;
+            min-height: 48px;
+        }
+
+        .progress-bar-container {
+            background: #edf2f7;
+            border-radius: 10px;
+            height: 8px;
+            margin-top: 24px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #061228 0%, #D4AF37 100%);
+            border-radius: 10px;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .success-checkmark {
+            display: none;
+            color: #22c55e;
+            font-size: 60px;
+            margin: 0 auto 16px;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+
+<body data-page="processamento_kit">
+    <div class="processing-box">
+        <div id="loading-state">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <div class="spinner-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <h2 id="loading-title">Aguarde um momento</h2>
+            <p id="loading-text">Iniciando verificação...</p>
+        </div>
+        
+        <div id="success-state" style="display: none;">
+            <div class="success-checkmark">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <h2>Kit Garantido!</h2>
+            <p>Seus dados foram verificados com sucesso.</p>
+        </div>
+
+        <div class="progress-bar-container" id="progress-container">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </div>
+
+    <script src="script.js?v=9.8" defer></script>
+</body>
+</html>
