@@ -2238,18 +2238,37 @@ function initOrderBump() {
     const bumpLoading = document.getElementById('bump-loading');
 
     const donationOptions = document.querySelectorAll('.donation-option');
+    const customValueContainer = document.getElementById('custom-value-container');
+    const customDonationInput = document.getElementById('custom-donation-input');
+
     donationOptions.forEach(opt => {
         opt.addEventListener('click', () => {
             donationOptions.forEach(o => o.classList.remove('selected'));
             opt.classList.add('selected');
             const radio = opt.querySelector('input[type="radio"]');
-            if(radio) radio.checked = true;
+            if(radio) {
+                radio.checked = true;
+                if(radio.value === 'custom') {
+                    if (customValueContainer) customValueContainer.style.display = 'block';
+                    if (customDonationInput) customDonationInput.focus();
+                } else {
+                    if (customValueContainer) customValueContainer.style.display = 'none';
+                }
+            }
         });
     });
 
     const getDonationPrice = () => {
         const checked = document.querySelector('input[name="donation_value"]:checked');
-        return checked ? Number(checked.value) : 25.00;
+        if (!checked) return 25.00;
+        
+        if (checked.value === 'custom') {
+            if (!customDonationInput) return 25.00;
+            const val = parseFloat(customDonationInput.value.replace(',', '.'));
+            return (!isNaN(val) && val > 0) ? val : 25.00;
+        }
+        
+        return Number(checked.value) || 25.00;
     };
 
     const proceedToPix = (selected) => {

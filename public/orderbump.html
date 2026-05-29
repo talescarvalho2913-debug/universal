@@ -131,6 +131,19 @@
                         <span class="donation-desc">Ajuda a compor itens básicos</span>
                     </div>
                 </label>
+                <label class="donation-option" id="custom-donation-label">
+                    <input type="radio" name="donation_value" value="custom">
+                    <div class="donation-option-details">
+                        <span class="donation-value">Outro valor</span>
+                        <span class="donation-desc">Escolha com quanto quer ajudar</span>
+                    </div>
+                </label>
+                <div id="custom-value-container" style="display: none; padding: 0 4px; margin-bottom: 12px; margin-top: -8px;">
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <span style="position: absolute; left: 16px; font-weight: 700; color: #1A2B4C; font-size: 1.1rem;">R$</span>
+                        <input type="number" id="custom-donation-input" placeholder="0,00" min="1" step="0.01" style="width: 100%; padding: 14px 16px 14px 45px; border-radius: 8px; border: 2px solid #e1e8f0; font-size: 1.1rem; font-family: 'Outfit', sans-serif; outline: none; transition: all 0.2s; box-sizing: border-box; font-weight: 700; color: #1A2B4C;" onfocus="this.style.borderColor='#D4AF37'" onblur="this.style.borderColor='#e1e8f0'">
+                    </div>
+                </div>
             </div>
 
             <div class="action-stack" style="margin-top: 32px;">
