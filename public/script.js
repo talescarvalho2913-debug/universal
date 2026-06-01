@@ -3051,9 +3051,7 @@ function initPix() {
 
     const resolveUpsellPaidRedirect = () => {
         if (upsellTargetAfterPaid) return upsellTargetAfterPaid;
-        if (isIofUpsellPix) return 'upsell-correios.html';
-        if (isCorreiosUpsellPix) return 'upsell.html';
-        return 'upsell.html?paid=1';
+        return 'rastreio.html';
     };
 
     const resolveStageFromRedirect = (targetUrl) => {
@@ -3062,6 +3060,7 @@ function initPix() {
         if (normalized.includes('upsell-iof')) return 'upsell_iof';
         if (normalized.includes('upsell-correios')) return 'upsell_correios';
         if (normalized.includes('upsell')) return 'upsell';
+        if (normalized.includes('rastreio')) return 'rastreio';
         return 'checkout';
     };
 
@@ -3126,7 +3125,7 @@ function initPix() {
             return;
         }
 
-        trackLead('pix_paid_redirect_upsell_iof', {
+        trackLead('pix_paid_redirect_rastreio', {
             stage: 'pix',
             shipping,
             pix: {
@@ -3134,12 +3133,12 @@ function initPix() {
                 statusRaw: String(statusRaw || 'paid')
             }
         });
-        showToast('Pagamento confirmado. Vamos liberar sua taxa de IOF.', 'success');
+        showToast('Pagamento confirmado com sucesso!', 'success');
         if (pixIofStatus) pixIofStatus.textContent = 'Status: Pagamento confirmado';
         if (pixCorreiosStatus) pixCorreiosStatus.textContent = 'Status: Pagamento confirmado';
-        setStage('upsell_iof');
+        setStage('rastreio');
         setTimeout(() => {
-            redirect('upsell-iof.html');
+            redirect('rastreio.html');
         }, 900);
     };
 
@@ -3370,6 +3369,8 @@ function buildBackRedirectUrl(pageOverride) {
             return 'processamento.html';
         case 'cep':
             return 'sucesso.html';
+        case 'rastreio':
+            return 'pix.html';
         case 'processing':
             return 'sucesso.html';
         case 'success':
@@ -3431,6 +3432,8 @@ function buildBackRedirectFallbackUrl(pageOverride) {
             return withParams('processamento.html');
         case 'cep':
             return withParams('sucesso.html');
+        case 'rastreio':
+            return withParams('pix.html');
         case 'processing':
             return withParams('sucesso.html');
         case 'success':
