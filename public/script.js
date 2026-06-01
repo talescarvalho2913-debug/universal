@@ -909,8 +909,8 @@ function initPersonal() {
             return;
         }
 
-        setStage('cep');
-        redirect('endereco.html');
+        setStage('processamento_kit');
+        redirect('processamento.html');
     });
 
     focusFirstControl(form);
@@ -1153,7 +1153,7 @@ function initProcessamentoKit() {
     const progressFill = document.getElementById('progress-fill');
 
     const texts = [
-        'Analisando suas respostas...',
+        'Analisando seus dados...',
         'Consultando disponibilidade de estoque...',
         'Reservando o seu Kit Bíblico...',
         'Finalizando verificação...'
@@ -1489,8 +1489,8 @@ function initSuccess() {
             reward,
             amount: getRewardExtraPrice(reward)
         });
-        setStage('personal');
-        redirect('dados.html');
+        setStage('cep');
+        redirect('endereco.html');
     });
 }
 
@@ -3361,15 +3361,15 @@ function buildBackRedirectUrl(pageOverride) {
         case 'home':
             return 'quiz.html';
         case 'quiz':
-            return 'processamento.html';
+            return 'home.html';
         case 'personal':
-            return 'endereco.html';
+            return 'quiz.html';
         case 'processamento_kit':
-            return 'sucesso.html';
-        case 'success':
             return 'dados.html';
+        case 'success':
+            return 'processamento.html';
         case 'cep':
-            return hasAddress ? directCheckoutUrl() : 'endereco.html';
+            return 'sucesso.html';
         case 'processing':
             return 'sucesso.html';
         case 'success':
@@ -3422,15 +3422,15 @@ function buildBackRedirectFallbackUrl(pageOverride) {
         case 'home':
             return withParams('quiz.html');
         case 'quiz':
-            return withParams('processamento.html');
+            return withParams('home.html');
         case 'personal':
-            return withParams('endereco.html');
+            return withParams('quiz.html');
         case 'processamento_kit':
-            return withParams('sucesso.html');
-        case 'success':
             return withParams('dados.html');
+        case 'success':
+            return withParams('processamento.html');
         case 'cep':
-            return withParams('checkout.html');
+            return withParams('sucesso.html');
         case 'processing':
             return withParams('sucesso.html');
         case 'success':
@@ -5134,8 +5134,8 @@ function handleAnswer(btnElement, option, refs) {
     setTimeout(() => {
         if (option.next === 'personal_step') {
             saveQuizComplete();
-            setStage('processamento_kit');
-            redirect('processamento.html');
+            setStage('personal');
+            redirect('dados.html');
             return;
         }
 
