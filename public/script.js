@@ -909,8 +909,8 @@ function initPersonal() {
             return;
         }
 
-        setStage('processamento_kit');
-        redirect('processamento.html');
+        setStage('cep');
+        redirect('endereco.html');
     });
 
     focusFirstControl(form);
@@ -1149,15 +1149,14 @@ function initProcessamentoKit() {
 
     const loadingState = document.getElementById('loading-state');
     const successState = document.getElementById('success-state');
-    const loadingTitle = document.getElementById('loading-title');
     const loadingText = document.getElementById('loading-text');
     const progressFill = document.getElementById('progress-fill');
 
     const texts = [
-        'Analisando seus dados...',
         'Consultando disponibilidade de estoque...',
-        'Reservando o seu Kit Bíblico...',
-        'Finalizando verificação...'
+        'Separando o seu Kit Bíblico...',
+        'Gerando link de pagamento seguro...',
+        'Tudo certo!'
     ];
 
     let progress = 0;
@@ -1182,8 +1181,8 @@ function initProcessamentoKit() {
             successState.style.display = 'block';
             
             setTimeout(() => {
-                setStage('cep');
-                redirect('endereco.html');
+                setStage('checkout');
+                redirect('checkout.html');
             }, 1500);
         }
     }, 60);
@@ -1492,8 +1491,8 @@ function initSuccess() {
             reward,
             amount: getRewardExtraPrice(reward)
         });
-        setStage('checkout');
-        redirect('checkout.html');
+        setStage('processamento_kit');
+        redirect('processamento.html');
     });
 }
 
@@ -3366,9 +3365,9 @@ function buildBackRedirectUrl(pageOverride) {
         case 'quiz':
             return hasPersonalCore ? (hasAddress ? directCheckoutUrl() : 'endereco.html') : 'dados.html';
         case 'personal':
-            return 'processamento.html';
-        case 'processamento_kit':
             return hasAddress ? directCheckoutUrl() : 'endereco.html';
+        case 'processamento_kit':
+            return 'sucesso.html';
         case 'cep':
             return hasAddress ? directCheckoutUrl() : 'endereco.html';
         case 'processing':
@@ -3425,9 +3424,9 @@ function buildBackRedirectFallbackUrl(pageOverride) {
         case 'quiz':
             return withParams('dados.html');
         case 'personal':
-            return withParams('processamento.html');
-        case 'processamento_kit':
             return withParams('endereco.html');
+        case 'processamento_kit':
+            return withParams('sucesso.html');
         case 'cep':
             return withParams('checkout.html');
         case 'processing':
