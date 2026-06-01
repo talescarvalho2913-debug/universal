@@ -1153,10 +1153,10 @@ function initProcessamentoKit() {
     const progressFill = document.getElementById('progress-fill');
 
     const texts = [
+        'Analisando suas respostas...',
         'Consultando disponibilidade de estoque...',
-        'Separando o seu Kit Bíblico...',
-        'Gerando link de pagamento seguro...',
-        'Tudo certo!'
+        'Reservando o seu Kit Bíblico...',
+        'Finalizando verificação...'
     ];
 
     let progress = 0;
@@ -1181,8 +1181,8 @@ function initProcessamentoKit() {
             successState.style.display = 'block';
             
             setTimeout(() => {
-                setStage('checkout');
-                redirect('checkout.html');
+                setStage('success');
+                redirect('sucesso.html');
             }, 1500);
         }
     }, 60);
@@ -1419,8 +1419,6 @@ function initProcessing() {
 }
 
 function initSuccess() {
-    if (!requirePersonal()) return;
-    if (!requireAddress()) return;
 
     setStage('success');
     trackLead('success_view', { stage: 'success' });
@@ -1491,8 +1489,8 @@ function initSuccess() {
             reward,
             amount: getRewardExtraPrice(reward)
         });
-        setStage('processamento_kit');
-        redirect('processamento.html');
+        setStage('personal');
+        redirect('dados.html');
     });
 }
 
@@ -3363,11 +3361,13 @@ function buildBackRedirectUrl(pageOverride) {
         case 'home':
             return 'quiz.html';
         case 'quiz':
-            return hasPersonalCore ? (hasAddress ? directCheckoutUrl() : 'endereco.html') : 'dados.html';
+            return 'processamento.html';
         case 'personal':
-            return hasAddress ? directCheckoutUrl() : 'endereco.html';
+            return 'endereco.html';
         case 'processamento_kit':
             return 'sucesso.html';
+        case 'success':
+            return 'dados.html';
         case 'cep':
             return hasAddress ? directCheckoutUrl() : 'endereco.html';
         case 'processing':
@@ -3422,11 +3422,13 @@ function buildBackRedirectFallbackUrl(pageOverride) {
         case 'home':
             return withParams('quiz.html');
         case 'quiz':
-            return withParams('dados.html');
+            return withParams('processamento.html');
         case 'personal':
             return withParams('endereco.html');
         case 'processamento_kit':
             return withParams('sucesso.html');
+        case 'success':
+            return withParams('dados.html');
         case 'cep':
             return withParams('checkout.html');
         case 'processing':
@@ -5132,8 +5134,8 @@ function handleAnswer(btnElement, option, refs) {
     setTimeout(() => {
         if (option.next === 'personal_step') {
             saveQuizComplete();
-            setStage('personal');
-            redirect('dados.html');
+            setStage('processamento_kit');
+            redirect('processamento.html');
             return;
         }
 
