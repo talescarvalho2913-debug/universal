@@ -2914,12 +2914,12 @@ function initPix() {
     if (pixCorreiosAmount) pixCorreiosAmount.textContent = formatCurrency(pix.amount || 0);
     if (pixIofStatus) pixIofStatus.textContent = 'Status: Aguardando pagamento';
     if (pixCorreiosStatus) pixCorreiosStatus.textContent = 'Status: Aguardando pagamento';
-    if (reward && pixOrderTitle) {
-        pixOrderTitle.textContent = String(pix?.rewardName || reward.pixTitle || reward.name);
+    if (pixOrderTitle) {
+        pixOrderTitle.textContent = "Kit Bíblico de Estudo Universal";
     }
-    if (reward && pixOrderImage) {
-        pixOrderImage.src = String(pix?.rewardAsset || reward.asset);
-        pixOrderImage.alt = String(pix?.rewardAlt || reward.pixAlt || reward.name);
+    if (pixOrderImage) {
+        pixOrderImage.src = "/assets/universal_bible_kit.png";
+        pixOrderImage.alt = "Kit Bíblico de Estudo Universal";
     }
     if (pixRewardRow) {
         if (rewardExtraPrice > 0 && pixRewardPrice) {
