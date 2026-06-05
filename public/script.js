@@ -32,10 +32,40 @@ const questions = {
         id: 'leitura_livros',
         text: 'Você já leu algum livro do Bispo Edir Macedo ou outro autor da Universal?',
         options: [
-            { text: 'Sim, já li vários', icon: '📚', next: 'retirada_kit' },
-            { text: 'Li um ou dois', icon: '📖', next: 'retirada_kit' },
-            { text: 'Ainda não li, mas tenho interesse', icon: '💡', next: 'retirada_kit' },
-            { text: 'Não li nenhum', icon: '❌', next: 'retirada_kit' }
+            { text: 'Sim, já li vários', icon: '📚', next: 'vontade_estudar' },
+            { text: 'Li um ou dois', icon: '📖', next: 'vontade_estudar' },
+            { text: 'Ainda não li, mas tenho interesse', icon: '💡', next: 'vontade_estudar' },
+            { text: 'Não li nenhum', icon: '❌', next: 'vontade_estudar' }
+        ]
+    },
+    vontade_estudar: {
+        id: 'vontade_estudar',
+        text: 'Você tem vontade de aprofundar seus estudos bíblicos e entender mais sobre a fé?',
+        options: [
+            { text: 'Sim, tenho muita vontade', icon: '🙏', next: 'frequencia_estudo' },
+            { text: 'Às vezes sinto essa necessidade', icon: '🤔', next: 'frequencia_estudo' },
+            { text: 'Gostaria, mas me falta tempo', icon: '⏳', next: 'frequencia_estudo' },
+            { text: 'Não no momento', icon: '❌', next: 'frequencia_estudo' }
+        ]
+    },
+    frequencia_estudo: {
+        id: 'frequencia_estudo',
+        text: 'Quantas vezes na semana você costuma tirar um momento para orar ou meditar na Palavra?',
+        options: [
+            { text: 'Todos os dias', icon: '☀️', next: 'importancia_fe' },
+            { text: 'Algumas vezes na semana', icon: '🗓️', next: 'importancia_fe' },
+            { text: 'Apenas aos domingos', icon: '⛪', next: 'importancia_fe' },
+            { text: 'Raramente', icon: '🌙', next: 'importancia_fe' }
+        ]
+    },
+    importancia_fe: {
+        id: 'importancia_fe',
+        text: 'Qual o papel da fé na superação dos seus desafios diários?',
+        options: [
+            { text: 'É o que me sustenta e me dá forças', icon: '🛡️', next: 'retirada_kit' },
+            { text: 'Me ajuda nos momentos difíceis', icon: '🤝', next: 'retirada_kit' },
+            { text: 'Estou aprendendo a confiar mais', icon: '🌱', next: 'retirada_kit' },
+            { text: 'Ainda tenho dificuldades', icon: '💧', next: 'retirada_kit' }
         ]
     },
     retirada_kit: {
