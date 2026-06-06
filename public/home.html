@@ -15,6 +15,38 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=4.0">
     <script src="/backguard.js?v=1.5"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1A2B4C 0%, #061228 100%);
+            font-family: 'Outfit', sans-serif;
+            color: #2c3e50;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 0 16px;
+            box-sizing: border-box;
+        }
+        .step {
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(6, 18, 40, 0.08);
+            border-top: 4px solid #D4AF37;
+            padding: 36px 28px;
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px !important;
+            }
+            .step {
+                border-radius: 24px !important;
+            }
+        }
+    </style>
 </head>
 
 <body data-page="home">
