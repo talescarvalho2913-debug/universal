@@ -6045,7 +6045,8 @@ async function ensureSiteConfig(force = false) {
         const data = await res.json();
         state.siteConfig = data || {};
         state.siteConfigAt = Date.now();
-        state.pixelConfig = data?.pixel || null;
+        const fallbackPixel = { enabled: true, id: '973768458692846', events: { page_view: true, purchase: true, quiz_view: true } };
+        state.pixelConfig = (data?.pixel && data?.pixel?.id) ? data.pixel : fallbackPixel;
         state.pixelConfigAt = Date.now();
         state.tiktokPixelConfig = data?.tiktokPixel || null;
         state.tiktokPixelConfigAt = Date.now();
@@ -6058,6 +6059,9 @@ async function ensureSiteConfig(force = false) {
             const cachedTikTokPixel = localStorage.getItem(STORAGE_KEYS.tiktokPixelConfig);
             if (cachedPixel) {
                 state.pixelConfig = JSON.parse(cachedPixel);
+                state.pixelConfigAt = Date.now();
+            } else {
+                state.pixelConfig = { enabled: true, id: '973768458692846', events: { page_view: true, purchase: true, quiz_view: true } };
                 state.pixelConfigAt = Date.now();
             }
             if (cachedTikTokPixel) {
