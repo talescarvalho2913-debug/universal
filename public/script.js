@@ -3599,11 +3599,13 @@ function initAdmin() {
     const metricPix = document.getElementById('metric-pix');
     const metricFrete = document.getElementById('metric-frete');
     const metricCep = document.getElementById('metric-cep');
+    const metricQuiz = document.getElementById('metric-quiz');
     const metricUpdated = document.getElementById('metric-updated');
     const metricBase = document.getElementById('metric-base');
     const metricConvPix = document.getElementById('metric-conv-pix');
     const metricConvFrete = document.getElementById('metric-conv-frete');
     const metricConvCep = document.getElementById('metric-conv-cep');
+    const metricConvQuiz = document.getElementById('metric-conv-quiz');
     const metricActiveGateway = document.getElementById('metric-active-gateway');
     const metricBestGateway = document.getElementById('metric-best-gateway');
     const metricGatewayAtivushubConv = document.getElementById('metric-gateway-ativushub-conv');
@@ -4639,6 +4641,7 @@ function initAdmin() {
         } else {
         if (reset) {
             metrics.total = 0;
+            metrics.quiz = 0;
             metrics.pix = 0;
             metrics.frete = 0;
             metrics.cep = 0;
@@ -4662,6 +4665,12 @@ function initAdmin() {
             if (pixTxid && pixTxid !== '-') gatewayStats.pix += 1;
             if (frete && frete !== '-') metrics.frete += 1;
             if (cep && cep !== '-') metrics.cep += 1;
+            
+            const st = String(row.stage || '').trim().toLowerCase();
+            const quizComplete = row.payload?.quizComplete || st === 'quiz' || st === 'personal' || st === 'cep' || st === 'checkout' || st === 'pix' || st === 'complete' || st === 'success' || (cep && cep !== '-') || (frete && frete !== '-');
+            if (quizComplete) {
+                metrics.quiz = (metrics.quiz || 0) + 1;
+            }
             const isPaid = row.is_paid === true || ev === 'pix_confirmed' || ev === 'pagamento_confirmado' || ev === 'paid';
             if (isPaid) metrics.paid += 1;
             if (isPaid) gatewayStats.paid += 1;
@@ -4676,6 +4685,7 @@ function initAdmin() {
         if (metricPix) metricPix.textContent = String(metrics.paid);
         if (metricFrete) metricFrete.textContent = String(metrics.frete);
         if (metricCep) metricCep.textContent = String(metrics.cep);
+        if (metricQuiz) metricQuiz.textContent = String(metrics.quiz || 0);
         if (metricUpdated) {
             metricUpdated.textContent = formatDateTime(metrics.lastUpdated);
         }
@@ -4685,10 +4695,12 @@ function initAdmin() {
         const pctPix = total ? Math.round((metrics.paid / total) * 100) : 0;
         const pctFrete = total ? Math.round((metrics.frete / total) * 100) : 0;
         const pctCep = total ? Math.round((metrics.cep / total) * 100) : 0;
+        const pctQuiz = total ? Math.round(((metrics.quiz || 0) / total) * 100) : 0;
 
         if (metricConvPix) metricConvPix.textContent = `${pctPix}%`;
         if (metricConvFrete) metricConvFrete.textContent = `${pctFrete}%`;
         if (metricConvCep) metricConvCep.textContent = `${pctCep}%`;
+        if (metricConvQuiz) metricConvQuiz.textContent = `${pctQuiz}%`;
         if (funnelPix) funnelPix.style.width = `${pctPix}%`;
         if (funnelFrete) funnelFrete.style.width = `${pctFrete}%`;
         if (funnelCep) funnelCep.style.width = `${pctCep}%`;

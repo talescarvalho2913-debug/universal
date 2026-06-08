@@ -1455,6 +1455,7 @@ async function getLeads(req, res) {
 
     const summary = {
         total: 0,
+        quiz: 0,
         cep: 0,
         frete: 0,
         pix: 0,
@@ -1515,7 +1516,7 @@ async function getLeads(req, res) {
     while (!done && summaryOffset < maxSummaryRows) {
         const u = new URL(`${SUPABASE_URL}/rest/v1/leads`);
         const take = Math.min(pageSize, maxSummaryRows - summaryOffset);
-        u.searchParams.set('select', 'cep,shipping_name,pix_txid,last_event,updated_at,created_at,payload');
+        u.searchParams.set('select', 'stage,cep,shipping_name,pix_txid,last_event,updated_at,created_at,payload');
         u.searchParams.set('order', 'updated_at.desc');
         u.searchParams.set('limit', String(take));
         u.searchParams.set('offset', String(summaryOffset));
@@ -1552,8 +1553,13 @@ async function getLeads(req, res) {
             const gatewaySummary = summary.gatewayStats[gateway];
             summary.total += 1;
             gatewaySummary.leads += 1;
-            if (String(row?.cep || '').trim() && String(row?.cep || '').trim() !== '-') summary.cep += 1;
-            if (String(row?.shipping_name || '').trim() && String(row?.shipping_name || '').trim() !== '-') summary.frete += 1;
+            const stage = String(row?.stage || '').trim().toLowerCase();
+            const hasCep = String(row?.cep || '').trim() && String(row?.cep || '').trim() !== '-';
+            const hasFrete = String(row?.shipping_name || '').trim() && String(row?.shipping_name || '').trim() !== '-';
+            const quizComplete = row?.payload?.quizComplete || stage === 'quiz' || stage === 'personal' || stage === 'cep' || stage === 'checkout' || stage === 'pix' || stage === 'complete' || stage === 'success' || hasCep || hasFrete;
+            if (quizComplete) summary.quiz += 1;
+            if (hasCep) summary.cep += 1;
+            if (hasFrete) summary.frete += 1;
             if (String(row?.pix_txid || '').trim() && String(row?.pix_txid || '').trim() !== '-') {
                 summary.pix += 1;
                 gatewaySummary.pix += 1;
