@@ -1881,8 +1881,8 @@ body[data-page='upsell-iof'] .action-stack {
 
 .summary-total {
     width: 100%;
-    background: #fff6f7;
-    border: 1px solid #f5d4d8;
+    background: #eef3fa;
+    border: 1px solid #c6d6eb;
     border-radius: var(--radius-md);
     padding: 14px 16px;
     margin-bottom: 0;
