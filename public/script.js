@@ -1197,10 +1197,10 @@ function initProcessamentoKit() {
             loadingText.textContent = texts[textIndex];
             textIndex++;
         }
-    }, 800);
+    }, 2000);
 
     const progressInterval = setInterval(() => {
-        progress += 2;
+        progress += 1;
         progressFill.style.width = `${progress}%`;
         
         if (progress >= 100) {
@@ -1215,7 +1215,7 @@ function initProcessamentoKit() {
                 redirect('sucesso.html');
             }, 1500);
         }
-    }, 60);
+    }, 90);
 }
 
 
