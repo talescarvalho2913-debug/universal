@@ -589,13 +589,27 @@ p {
 
 /* Scarcity */
 .scarcity-box {
-    background-color: #061228;
-    border: 1px solid #1A2B4C;
+    background-color: rgba(6, 18, 40, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(212, 175, 55, 0.2);
     color: #ffffff;
-    padding: 16px;
+    padding: 20px;
     border-radius: var(--radius-md);
     width: 100%;
     margin-bottom: 22px;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    font-weight: 400;
+    text-align: center;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
+.scarcity-box strong {
+    font-weight: 700;
+    color: #D4AF37;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .shipping-note {
