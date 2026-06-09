@@ -589,9 +589,9 @@ p {
 
 /* Scarcity */
 .scarcity-box {
-    background-color: #FFF9E6;
-    border: 1px solid #FFF0B3;
-    color: #856404;
+    background-color: #061228;
+    border: 1px solid #1A2B4C;
+    color: #ffffff;
     padding: 16px;
     border-radius: var(--radius-md);
     width: 100%;
