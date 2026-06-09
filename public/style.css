@@ -589,8 +589,10 @@ p {
 
 /* Scarcity */
 .scarcity-box {
-    background-color: #0d1b2a; /* Azul bem escuro e vivo */
-    border: 1px solid rgba(212, 175, 55, 0.3); /* Borda sutil dourada */
+    background-color: rgba(26, 43, 76, 0.85); /* Azul translúcido (85% de opacidade) */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15); /* Borda estilo vidro */
     color: #ffffff;
     padding: 18px 20px;
     border-radius: var(--radius-md);
@@ -601,11 +603,11 @@ p {
     line-height: 1.5;
     font-weight: 400;
     text-align: center;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); /* Sombra mais destacada */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 .scarcity-box strong {
     font-weight: 700;
-    color: #ffffff; /* Letras brancas, conforme pedido */
+    color: #ffffff;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
