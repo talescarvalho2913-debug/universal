@@ -1,12 +1,12 @@
 const questions = {
     start: {
         id: 'start',
-        text: 'Você sente que, no momento atual, precisa de uma direção espiritual mais forte para enfrentar as lutas do dia a dia?',
+        text: 'Há quanto tempo você conhece ou frequenta a Igreja Universal?',
         options: [
-            { text: 'Sim, sinto muita falta', icon: '🙏', next: 'q2_dificuldade' },
-            { text: 'Às vezes me sinto perdido(a)', icon: '🧭', next: 'q2_dificuldade' },
-            { text: 'Já tenho minha fé fortalecida', icon: '🛡️', next: 'q2_dificuldade' },
-            { text: 'Busco apenas mais conhecimento', icon: '📖', next: 'q2_dificuldade' }
+            { text: 'Sou membro ativo há anos', icon: '⛪', next: 'q2_dificuldade' },
+            { text: 'Comecei a frequentar recentemente', icon: '🌱', next: 'q2_dificuldade' },
+            { text: 'Acompanho apenas pela TV/Rádio', icon: '📻', next: 'q2_dificuldade' },
+            { text: 'Ainda não frequento, mas quero conhecer', icon: '✨', next: 'q2_dificuldade' }
         ]
     },
     q2_dificuldade: {
@@ -31,12 +31,12 @@ const questions = {
     },
     q4_beneficio: {
         id: 'q4_beneficio',
-        text: 'Nosso Kit Bíblico da Universal vem completo para sua jornada. Qual item você acha que mais vai te fortalecer agora?',
+        text: 'Quando você assiste aos grandes testemunhos da Universal, qual é o desejo que mais queima no seu coração?',
         options: [
-            { text: 'A Bíblia Sagrada de Estudo', icon: '📖', next: 'q5_compromisso' },
-            { text: 'Os Livros de Edificação da Alma', icon: '📚', next: 'q5_compromisso' },
-            { text: 'A mochila e garrafa para o dia a dia', icon: '🎒', next: 'q5_compromisso' },
-            { text: 'Todos os itens me ajudarão muito', icon: '⭐', next: 'q5_compromisso' }
+            { text: 'Ter uma transformação de vida igual', icon: '🔥', next: 'q5_compromisso' },
+            { text: 'Ver minha família unida e restaurada', icon: '🏠', next: 'q5_compromisso' },
+            { text: 'Alcançar a cura e a libertação', icon: '🕊️', next: 'q5_compromisso' },
+            { text: 'Conseguir minha independência financeira', icon: '💼', next: 'q5_compromisso' }
         ]
     },
     q5_compromisso: {
@@ -51,12 +51,12 @@ const questions = {
     },
     q6_chegada: {
         id: 'q6_chegada',
-        text: 'Imagine o seu Kit da Universal chegando na sua casa nos próximos dias. Qual será a primeira coisa que você fará?',
+        text: 'A Universal mantém suas portas abertas e seus projetos sociais através da fé do povo. Você tem o costume de contribuir, doar ou dizimar na obra de Deus?',
         options: [
-            { text: 'Vou abrir a Bíblia e fazer uma oração', icon: '🙏', next: 'q7_escassez' },
-            { text: 'Vou começar a ler os livros do Bispo', icon: '📖', next: 'q7_escassez' },
-            { text: 'Vou levar para a igreja no domingo', icon: '⛪', next: 'q7_escassez' },
-            { text: 'Vou guardar para ler com calma', icon: '📦', next: 'q7_escassez' }
+            { text: 'Sim, sou dizimista e ofertante fiel', icon: '🙏', next: 'q7_escassez' },
+            { text: 'Contribuo sempre que tenho condições', icon: '🤝', next: 'q7_escassez' },
+            { text: 'Ainda não tenho esse costume', icon: '🌱', next: 'q7_escassez' },
+            { text: 'Gostaria muito de começar a ajudar', icon: '❤️', next: 'q7_escassez' }
         ]
     },
     q7_escassez: {
