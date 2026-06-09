@@ -3058,6 +3058,9 @@ body[data-page='processing'] .step {
 }
 
 .footer {
+    width: 100%;
+    margin-top: auto;
+    box-sizing: border-box;
     padding: 20px 16px;
     text-align: center;
     color: #9e9e9e;
