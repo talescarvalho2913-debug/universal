@@ -4181,10 +4181,15 @@ function initAdmin() {
         });
 
         if (saveStatus) {
-            saveStatus.textContent = res.ok ? 'Configuracoes salvas.' : 'Falha ao salvar.';
+            if (res.ok) {
+                saveStatus.textContent = 'Configuracoes salvas.';
+            } else {
+                const detail = await res.json().catch(() => ({}));
+                saveStatus.textContent = 'Falha: ' + (detail.error || '') + ' ' + JSON.stringify(detail.detail || detail);
+            }
             setTimeout(() => {
                 if (saveStatus) saveStatus.textContent = '';
-            }, 2500);
+            }, 6000);
         }
         if (res.ok && hasPaymentsForm) {
             const activeGateway = normalizeGatewayKey(paymentsActiveGateway?.value || 'ativushub');

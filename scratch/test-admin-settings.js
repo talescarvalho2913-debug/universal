@@ -11,9 +11,15 @@ const adminPath = require('../api/admin/[...path].js');
         };
         // We will just patch requireAdmin globally or temporarily skip it.
         // Actually, let's just copy the logic in settings() and run it!
-        const { buildPushcutConfig } = require('../lib/pushcut');
         const { buildPaymentsConfig, mergePaymentSettings } = require('../lib/payment-gateway-config');
         const { saveSettings, defaultSettings, getSettings } = require('../lib/settings-store');
+        
+        function buildPushcutConfig(raw = {}) {
+            return {
+                ...raw,
+                templates: { ...(raw.templates || {}) }
+            };
+        }
         
         const currentSaved = await getSettings().catch(() => ({}));
         
