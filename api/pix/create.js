@@ -43,36 +43,15 @@ function resolveGateway(rawBody = {}, payments = {}) {
     if (requested === 'ghostspay' && ghostspayEnabled) return 'ghostspay';
     if (requested === 'sunize' && sunizeEnabled) return 'sunize';
     if (requested === 'paradise' && paradiseEnabled) return 'paradise';
-    
-    if (requested === 'atomopay') {
-        if (sunizeEnabled) return 'sunize';
-        if (paradiseEnabled) return 'paradise';
-        if (ghostspayEnabled) return 'ghostspay';
-        return ativushubEnabled ? 'ativushub' : 'atomopay';
-    }
-    if (requested === 'ghostspay') {
-        if (atomopayEnabled) return 'atomopay';
-        if (sunizeEnabled) return 'sunize';
-        if (paradiseEnabled) return 'paradise';
-        return ativushubEnabled ? 'ativushub' : 'ghostspay';
-    }
-    if (requested === 'sunize') {
-        if (atomopayEnabled) return 'atomopay';
-        if (ghostspayEnabled) return 'ghostspay';
-        if (paradiseEnabled) return 'paradise';
-        return ativushubEnabled ? 'ativushub' : 'sunize';
-    }
-    if (requested === 'paradise') {
-        if (atomopayEnabled) return 'atomopay';
-        if (ghostspayEnabled) return 'ghostspay';
-        if (sunizeEnabled) return 'sunize';
-        return ativushubEnabled ? 'ativushub' : 'paradise';
-    }
+    if (requested === 'atomopay' && atomopayEnabled) return 'atomopay';
+    if (requested === 'ghostspay' && ghostspayEnabled) return 'ghostspay';
+    if (requested === 'sunize' && sunizeEnabled) return 'sunize';
+    if (requested === 'paradise' && paradiseEnabled) return 'paradise';
     
     if (atomopayEnabled) return 'atomopay';
-    if (!sunizeEnabled && ghostspayEnabled) return 'ghostspay';
-    if (!sunizeEnabled && paradiseEnabled) return 'paradise';
     if (sunizeEnabled) return 'sunize';
+    if (ghostspayEnabled) return 'ghostspay';
+    if (paradiseEnabled) return 'paradise';
     return 'ativushub';
 }
 

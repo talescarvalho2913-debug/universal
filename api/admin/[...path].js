@@ -1995,7 +1995,8 @@ async function settings(req, res) {
 
         const result = await saveSettings(payload);
         if (!result.ok) {
-            res.status(502).json({ error: 'Falha ao salvar configuracao.' });
+            console.error('Falha ao salvar configuracao no admin:', result);
+            res.status(502).json({ error: 'Falha ao salvar configuracao.', detail: result });
             return;
         }
 
