@@ -601,15 +601,17 @@ p {
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
     font-size: 15px;
     line-height: 1.5;
-    font-weight: 400;
+    font-weight: 600; /* Letra mais gordinha para parecer 100% sólida */
     text-align: center;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8); /* Sombra pesada para destacar o texto */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 .scarcity-box strong {
-    font-weight: 700;
+    font-weight: 800; /* Super negrito */
     color: #ffffff;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
 }
 
 .shipping-note {
