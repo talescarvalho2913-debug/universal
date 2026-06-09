@@ -1,81 +1,72 @@
 const questions = {
     start: {
         id: 'start',
-        text: 'Qual é o seu grau de conexão com a Igreja Universal?',
+        text: 'Você sente que, no momento atual, precisa de uma direção espiritual mais forte para enfrentar as lutas do dia a dia?',
         options: [
-            { text: 'Sou membro ativo', icon: '⛪', next: 'tempo_frequentado' },
-            { text: 'Frequento ocasionalmente', icon: '🙏', next: 'tempo_frequentado' },
-            { text: 'Gostaria de conhecer', icon: '✨', next: 'meio_contato' },
-            { text: 'Apenas admiro o trabalho', icon: '🤝', next: 'meio_contato' }
+            { text: 'Sim, sinto muita falta', icon: '🙏', next: 'q2_dificuldade' },
+            { text: 'Às vezes me sinto perdido(a)', icon: '🧭', next: 'q2_dificuldade' },
+            { text: 'Já tenho minha fé fortalecida', icon: '🛡️', next: 'q2_dificuldade' },
+            { text: 'Busco apenas mais conhecimento', icon: '📖', next: 'q2_dificuldade' }
         ]
     },
-    tempo_frequentado: {
-        id: 'tempo_frequentado',
-        text: 'Há quanto tempo você frequenta a Universal?',
+    q2_dificuldade: {
+        id: 'q2_dificuldade',
+        text: 'Sendo sincero(a), qual área da sua vida tem tirado mais o seu sono e a sua paz ultimamente?',
         options: [
-            { text: 'Menos de 1 ano', icon: '🌱', next: 'meio_contato' },
-            { text: 'De 1 a 5 anos', icon: '⭐', next: 'meio_contato' },
-            { text: 'Mais de 5 anos', icon: '🏆', next: 'meio_contato' }
+            { text: 'Minha família e casamento', icon: '🏠', next: 'q3_solucao' },
+            { text: 'Vida financeira e profissional', icon: '💼', next: 'q3_solucao' },
+            { text: 'Minha saúde física e emocional', icon: '❤️‍🩹', next: 'q3_solucao' },
+            { text: 'Vazio na alma e falta de paz', icon: '🕊️', next: 'q3_solucao' }
         ]
     },
-    meio_contato: {
-        id: 'meio_contato',
-        text: 'Qual canal ou programa da Universal você mais acompanha?',
+    q3_solucao: {
+        id: 'q3_solucao',
+        text: 'O Bispo Macedo sempre ensina que a Palavra de Deus é a chave para todas as portas. Você acredita que mergulhar na Bíblia pode mudar a sua situação atual?',
         options: [
-            { text: 'Rede Record / TV Universal', icon: '📺', next: 'leitura_livros' },
-            { text: 'Rede Aleluia (Rádio)', icon: '📻', next: 'leitura_livros' },
-            { text: 'Redes Sociais / YouTube', icon: '📱', next: 'leitura_livros' },
-            { text: 'Não costumo acompanhar', icon: '❌', next: 'leitura_livros' }
+            { text: 'Com certeza, é tudo que preciso', icon: '✨', next: 'q4_beneficio' },
+            { text: 'Eu quero acreditar que sim', icon: '🌱', next: 'q4_beneficio' },
+            { text: 'Tenho minhas dúvidas', icon: '🤔', next: 'q4_beneficio' },
+            { text: 'Sim, já vivenciei isso', icon: '🙌', next: 'q4_beneficio' }
         ]
     },
-    leitura_livros: {
-        id: 'leitura_livros',
-        text: 'Você já leu algum livro do Bispo Edir Macedo ou outro autor da Universal?',
+    q4_beneficio: {
+        id: 'q4_beneficio',
+        text: 'Nosso Kit Bíblico da Universal vem completo para sua jornada. Qual item você acha que mais vai te fortalecer agora?',
         options: [
-            { text: 'Sim, já li vários', icon: '📚', next: 'vontade_estudar' },
-            { text: 'Li um ou dois', icon: '📖', next: 'vontade_estudar' },
-            { text: 'Ainda não li, mas tenho interesse', icon: '💡', next: 'vontade_estudar' },
-            { text: 'Não li nenhum', icon: '❌', next: 'vontade_estudar' }
+            { text: 'A Bíblia Sagrada de Estudo', icon: '📖', next: 'q5_compromisso' },
+            { text: 'Os Livros de Edificação da Alma', icon: '📚', next: 'q5_compromisso' },
+            { text: 'A mochila e garrafa para o dia a dia', icon: '🎒', next: 'q5_compromisso' },
+            { text: 'Todos os itens me ajudarão muito', icon: '⭐', next: 'q5_compromisso' }
         ]
     },
-    vontade_estudar: {
-        id: 'vontade_estudar',
-        text: 'Você tem vontade de aprofundar seus estudos bíblicos e entender mais sobre a fé?',
+    q5_compromisso: {
+        id: 'q5_compromisso',
+        text: 'O Kit é uma bênção valiosa, mas exige dedicação. Você se compromete a tirar alguns minutos do seu dia para ler os materiais quando ele chegar?',
         options: [
-            { text: 'Sim, tenho muita vontade', icon: '🙏', next: 'frequencia_estudo' },
-            { text: 'Às vezes sinto essa necessidade', icon: '🤔', next: 'frequencia_estudo' },
-            { text: 'Gostaria, mas me falta tempo', icon: '⏳', next: 'frequencia_estudo' },
-            { text: 'Não no momento', icon: '❌', next: 'frequencia_estudo' }
+            { text: 'Sim, eu prometo me dedicar', icon: '🤝', next: 'q6_chegada' },
+            { text: 'Vou tentar encaixar na rotina', icon: '⏳', next: 'q6_chegada' },
+            { text: 'Lerei apenas nos finais de semana', icon: '🗓️', next: 'q6_chegada' },
+            { text: 'Já tenho o costume de ler diariamente', icon: '☀️', next: 'q6_chegada' }
         ]
     },
-    frequencia_estudo: {
-        id: 'frequencia_estudo',
-        text: 'Quantas vezes na semana você costuma tirar um momento para orar ou meditar na Palavra?',
+    q6_chegada: {
+        id: 'q6_chegada',
+        text: 'Imagine o seu Kit da Universal chegando na sua casa nos próximos dias. Qual será a primeira coisa que você fará?',
         options: [
-            { text: 'Todos os dias', icon: '☀️', next: 'importancia_fe' },
-            { text: 'Algumas vezes na semana', icon: '🗓️', next: 'importancia_fe' },
-            { text: 'Apenas aos domingos', icon: '⛪', next: 'importancia_fe' },
-            { text: 'Raramente', icon: '🌙', next: 'importancia_fe' }
+            { text: 'Vou abrir a Bíblia e fazer uma oração', icon: '🙏', next: 'q7_escassez' },
+            { text: 'Vou começar a ler os livros do Bispo', icon: '📖', next: 'q7_escassez' },
+            { text: 'Vou levar para a igreja no domingo', icon: '⛪', next: 'q7_escassez' },
+            { text: 'Vou guardar para ler com calma', icon: '📦', next: 'q7_escassez' }
         ]
     },
-    importancia_fe: {
-        id: 'importancia_fe',
-        text: 'Qual o papel da fé na superação dos seus desafios diários?',
+    q7_escassez: {
+        id: 'q7_escassez',
+        text: 'Este lote promocional e gratuito de doações da Igreja Universal está quase esgotado. Por que você acha que merece receber um dos últimos Kits?',
         options: [
-            { text: 'É o que me sustenta e me dá forças', icon: '🛡️', next: 'retirada_kit' },
-            { text: 'Me ajuda nos momentos difíceis', icon: '🤝', next: 'retirada_kit' },
-            { text: 'Estou aprendendo a confiar mais', icon: '🌱', next: 'retirada_kit' },
-            { text: 'Ainda tenho dificuldades', icon: '💧', next: 'retirada_kit' }
-        ]
-    },
-    retirada_kit: {
-        id: 'retirada_kit',
-        text: 'Qual área da sua vida você mais busca fortalecer espiritualmente neste momento?',
-        options: [
-            { text: 'Família e União do Lar', icon: '🏠', next: 'personal_step' },
-            { text: 'Saúde e Força Interior', icon: '🛡️', next: 'personal_step' },
-            { text: 'Prosperidade e Carreira', icon: '💼', next: 'personal_step' },
-            { text: 'Paz de Espírito e Comunhão com Deus', icon: '🕊️', next: 'personal_step' }
+            { text: 'Porque preciso urgente de uma mudança', icon: '🔥', next: 'personal_step' },
+            { text: 'Porque vou usar para me aproximar de Deus', icon: '✝️', next: 'personal_step' },
+            { text: 'Porque não tenho condições de comprar um', icon: '🎁', next: 'personal_step' },
+            { text: 'Porque sinto que Deus me direcionou até aqui', icon: '🕊️', next: 'personal_step' }
         ]
     }
 };
