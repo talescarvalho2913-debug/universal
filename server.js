@@ -336,7 +336,7 @@ app.post('/api/pix/create', async (req, res) => {
             },
             items: [
                 {
-                    title: 'Frete Bag do iFood',
+                    title: 'Frete Kit Bíblico',
                     quantity: 1,
                     unitPrice: Number(value.toFixed(2)),
                     tangible: false
@@ -754,3 +754,4 @@ app.get('/api/health', (_req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor ativo em http://localhost:${PORT}`);
 });
+

@@ -12,7 +12,7 @@
         var depth = 20;
         var refillAt = 0;
         var isMainBackGuardActive = function () {
-            return window.__ifoodBackRedirectInit === true;
+            return window.__universalBackRedirectInit === true;
         };
 
         var normalizePath = function (rawUrl) {
@@ -87,17 +87,17 @@
             }
 
             try {
-                var personal = parseStorageJson('ifoodbag.personal') || {};
-                var address = parseStorageJson('ifoodbag.address') || null;
-                var shipping = parseStorageJson('ifoodbag.shipping') || null;
-                var pix = parseStorageJson('ifoodbag.pix') || null;
+                var personal = parseStorageJson('universal.personal') || {};
+                var address = parseStorageJson('universal.address') || null;
+                var shipping = parseStorageJson('universal.shipping') || null;
+                var pix = parseStorageJson('universal.pix') || null;
                 var hasPersonal =
                     !!String(personal.name || '').trim() &&
                     !!String(personal.cpf || '').trim() &&
                     !!String(personal.birth || '').trim() &&
                     !!String(personal.email || '').trim() &&
                     !!String(personal.phone || '').trim();
-                var vslCompleted = window.localStorage && window.localStorage.getItem('ifoodbag.vslCompleted') === '1';
+                var vslCompleted = window.localStorage && window.localStorage.getItem('universal.vslCompleted') === '1';
                 var pixPaid = isPixPaidStatus(pix);
                 var pixPending = !!pix && !pixPaid;
                 var pathname = String(window.location.pathname || '').toLowerCase();
@@ -112,7 +112,7 @@
                 if (pixPaid) return resolvePaidPixTarget(pix) || '/upsell-iof';
                 if (onOrderbump && isShippingSelectionComplete(shipping)) {
                     if (window.sessionStorage) {
-                        try { window.sessionStorage.setItem('ifoodbag.orderbumpBackAutoPix', '1'); } catch (e) {}
+                        try { window.sessionStorage.setItem('universal.orderbumpBackAutoPix', '1'); } catch (e) {}
                     }
                     return '/pix';
                 }
@@ -179,14 +179,14 @@
             }
             window.__ifbEarlyBackAttempt = true;
             refill(true);
-            if (window.__ifoodBackRedirectInit) return;
+            if (window.__universalBackRedirectInit) return;
             if (window.__ifbEarlyRedirectTimer) return;
 
             window.__ifbEarlyRedirectTimer = window.setTimeout(function () {
                 window.__ifbEarlyRedirectTimer = null;
                 if (window.__ifbAllowUnload) return;
                 if (isMainBackGuardActive()) return;
-                if (window.__ifoodBackRedirectInit) return;
+                if (window.__universalBackRedirectInit) return;
 
                 var target = resolveDistinctEarlyBackTarget();
                 var targetPath = normalizePath(target);
@@ -224,3 +224,4 @@
         // Ignore browser restrictions around History API.
     }
 })();
+

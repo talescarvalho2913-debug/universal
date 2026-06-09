@@ -72,27 +72,27 @@ const questions = {
 };
 
 const STORAGE_KEYS = {
-    personal: 'ifoodbag.personal',
-    address: 'ifoodbag.address',
-    quizComplete: 'ifoodbag.quizComplete',
-    stage: 'ifoodbag.stage',
-    stock: 'ifoodbag.stock',
-    returnTo: 'ifoodbag.returnTo',
-    shipping: 'ifoodbag.shipping',
-    reward: 'ifoodbag.reward',
-    addressExtra: 'ifoodbag.addressExtra',
-    pix: 'ifoodbag.pix',
-    bump: 'ifoodbag.bump',
-    leadSession: 'ifoodbag.leadSession',
-    utm: 'ifoodbag.utm',
-    pixelConfig: 'ifoodbag.pixelConfig',
-    tiktokPixelConfig: 'ifoodbag.tiktokPixelConfig',
-    coupon: 'ifoodbag.coupon',
-    directCheckout: 'ifoodbag.directCheckout',
-    vslCompleted: 'ifoodbag.vslCompleted',
-    orderbumpBackAutoPix: 'ifoodbag.orderbumpBackAutoPix',
-    pixCreateLock: 'ifoodbag.pixCreateLock',
-    pixelEventDedupe: 'ifoodbag.pixelEventDedupe'
+    personal: 'universal.personal',
+    address: 'universal.address',
+    quizComplete: 'universal.quizComplete',
+    stage: 'universal.stage',
+    stock: 'universal.stock',
+    returnTo: 'universal.returnTo',
+    shipping: 'universal.shipping',
+    reward: 'universal.reward',
+    addressExtra: 'universal.addressExtra',
+    pix: 'universal.pix',
+    bump: 'universal.bump',
+    leadSession: 'universal.leadSession',
+    utm: 'universal.utm',
+    pixelConfig: 'universal.pixelConfig',
+    tiktokPixelConfig: 'universal.tiktokPixelConfig',
+    coupon: 'universal.coupon',
+    directCheckout: 'universal.directCheckout',
+    vslCompleted: 'universal.vslCompleted',
+    orderbumpBackAutoPix: 'universal.orderbumpBackAutoPix',
+    pixCreateLock: 'universal.pixCreateLock',
+    pixelEventDedupe: 'universal.pixelEventDedupe'
 };
 
 const REWARD_CATALOG = {
@@ -236,8 +236,8 @@ function setupGlobalBackRedirect(page) {
         page = aliases[rawPath] || rawPath || 'home';
     }
     if (page === 'admin' || isUpsellPage(page)) return;
-    if (window.__ifoodBackRedirectInit) return;
-    window.__ifoodBackRedirectInit = true;
+    if (window.__universalBackRedirectInit) return;
+    window.__universalBackRedirectInit = true;
     if (window.__ifbEarlyRedirectTimer) {
         clearTimeout(window.__ifbEarlyRedirectTimer);
         window.__ifbEarlyRedirectTimer = null;
@@ -289,7 +289,7 @@ function setupGlobalBackRedirect(page) {
     const couponMessage = modalEls.couponMessage;
     const couponBadge = modalEls.couponBadge;
     const couponSubtitle = modalEls.couponSubtitle;
-    const backOfferLevelKey = `ifoodbag.backOfferLevel.${page}`;
+    const backOfferLevelKey = `universal.backOfferLevel.${page}`;
     const getStoredOfferLevel = () => {
         try {
             return Math.max(0, Number(sessionStorage.getItem(backOfferLevelKey) || 0));
@@ -2425,7 +2425,7 @@ function initUpsellIof() {
 
     const startCountdown = () => {
         if (!timerLabel) return;
-        const storageKey = 'ifood_upsell_iof_deadline_ts';
+        const storageKey = 'universal_upsell_iof_deadline_ts';
         const now = Date.now();
         const fallbackDeadline = now + (10 * 60 * 1000);
         const savedRaw = Number(sessionStorage.getItem(storageKey) || 0);
@@ -2563,7 +2563,7 @@ function initUpsellCorreios() {
 
     const startCountdown = () => {
         if (!timerLabel) return;
-        const storageKey = 'ifood_upsell_correios_deadline_ts';
+        const storageKey = 'universal_upsell_correios_deadline_ts';
         const now = Date.now();
         const fallbackDeadline = now + (10 * 60 * 1000);
         const savedRaw = Number(sessionStorage.getItem(storageKey) || 0);
@@ -2690,7 +2690,7 @@ function initUpsell() {
 
     const startUpsellCountdown = () => {
         if (!timerLabel) return;
-        const storageKey = 'ifood_upsell_deadline_ts';
+        const storageKey = 'universal_upsell_deadline_ts';
         const now = Date.now();
         const fallbackDeadline = now + (10 * 60 * 1000);
         const savedRaw = Number(sessionStorage.getItem(storageKey) || 0);
@@ -3647,7 +3647,7 @@ function initAdmin() {
     const overviewRangeReset = document.getElementById('overview-range-reset');
     const overviewRangeStatus = document.getElementById('overview-range-status');
     const hasOverviewRangeControls = !!(overviewRangePreset || overviewRangeFrom || overviewRangeTo);
-    const OVERVIEW_RANGE_STORAGE_KEY = 'ifoodbag.admin.overview.range.v1';
+    const OVERVIEW_RANGE_STORAGE_KEY = 'universal.admin.overview.range.v1';
 
     let offset = 0;
     const limit = 50;
@@ -5539,7 +5539,7 @@ function getPixPersonalPayload() {
     const phoneDigits = String(personal.phoneDigits || personal.phone || '').replace(/\D/g, '');
     const cpfDigits = String(personal.cpf || '').replace(/\D/g, '');
     const suffix = String(sessionId || Date.now()).replace(/[^a-zA-Z0-9]/g, '').slice(-8).toLowerCase() || 'lead';
-    const fallbackEmail = `lead.${suffix}@ifoodbag.app`;
+    const fallbackEmail = `lead.${suffix}@universal.app`;
 
     return {
         name: String(personal.name || '').trim() || 'Cliente',
@@ -6090,8 +6090,8 @@ function loadFacebookPixel(pixelId) {
     const id = String(pixelId || '').trim();
     if (!id) return;
 
-    if (!window.__ifoodPixelInits || typeof window.__ifoodPixelInits !== 'object') {
-        window.__ifoodPixelInits = {};
+    if (!window.__universalPixelInits || typeof window.__universalPixelInits !== 'object') {
+        window.__universalPixelInits = {};
     }
 
     /* eslint-disable */
@@ -6107,12 +6107,12 @@ function loadFacebookPixel(pixelId) {
     }
     /* eslint-enable */
 
-    if (window.__ifoodPixelInits[id]) return;
+    if (window.__universalPixelInits[id]) return;
     try {
         // Disable Meta automatic events (e.g. SubscribedButtonClick auto-detected).
         window.fbq('set', 'autoConfig', false, id);
         window.fbq('init', id);
-        window.__ifoodPixelInits[id] = true;
+        window.__universalPixelInits[id] = true;
     } catch (_error) {}
 }
 
@@ -6129,11 +6129,11 @@ function loadTikTokPixel(pixelId, options = {}) {
     const id = String(pixelId || '').trim();
     if (!id) return;
 
-    if (!window.__ifoodTikTokPixelInits || typeof window.__ifoodTikTokPixelInits !== 'object') {
-        window.__ifoodTikTokPixelInits = {};
+    if (!window.__universalTikTokPixelInits || typeof window.__universalTikTokPixelInits !== 'object') {
+        window.__universalTikTokPixelInits = {};
     }
-    if (!window.__ifoodTikTokPixelPageViews || typeof window.__ifoodTikTokPixelPageViews !== 'object') {
-        window.__ifoodTikTokPixelPageViews = {};
+    if (!window.__universalTikTokPixelPageViews || typeof window.__universalTikTokPixelPageViews !== 'object') {
+        window.__universalTikTokPixelPageViews = {};
     }
 
     /* eslint-disable */
@@ -6180,19 +6180,19 @@ function loadTikTokPixel(pixelId, options = {}) {
     }
     /* eslint-enable */
 
-    if (!window.__ifoodTikTokPixelInits[id]) {
+    if (!window.__universalTikTokPixelInits[id]) {
         try {
             window.ttq.load(id);
-            window.__ifoodTikTokPixelInits[id] = true;
+            window.__universalTikTokPixelInits[id] = true;
         } catch (_error) {}
     }
 
-    if (options.firePageView && !window.__ifoodTikTokPixelPageViews[id]) {
+    if (options.firePageView && !window.__universalTikTokPixelPageViews[id]) {
         try {
             const tracker = getTikTokTracker(id);
             if (tracker && typeof tracker.page === 'function') {
                 tracker.page();
-                window.__ifoodTikTokPixelPageViews[id] = true;
+                window.__universalTikTokPixelPageViews[id] = true;
             }
         } catch (_error) {}
     }
@@ -6850,4 +6850,5 @@ function redirect(url) {
     window.__ifbAllowUnload = true;
     window.location.href = target;
 }
+
 
