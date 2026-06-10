@@ -157,17 +157,17 @@ function asObject(input) {
 const REWARD_CATALOG = {
     bag: {
         id: 'bag',
-        name: 'Bag do iFood',
+        name: 'Bag do Universal',
         extraPrice: 0
     },
     bau: {
         id: 'bau',
-        name: 'Ba\u00fa do iFood',
+        name: 'Ba\u00fa do Universal',
         extraPrice: 39.9
     },
     kit_entregador: {
         id: 'kit_entregador',
-        name: 'Kit Entregador iFood',
+        name: 'Kit Entregador Universal',
         extraPrice: 97.9
     }
 };
@@ -862,7 +862,7 @@ module.exports = async (req, res) => {
         const normalizedShipping = {
             ...(shipping || {}),
             id: String(shipping?.id || '').trim() || 'frete',
-            name: String(shipping?.name || '').trim() || 'Frete Bag iFood',
+            name: String(shipping?.name || '').trim() || 'Frete Bag Universal',
             price: shippingPrice,
             basePrice: toBrlAmount(shipping?.basePrice || shipping?.originalPrice || shippingPrice),
             originalPrice: toBrlAmount(shipping?.originalPrice || shipping?.basePrice || shippingPrice)
@@ -891,7 +891,7 @@ module.exports = async (req, res) => {
 
         const items = [
             {
-                title: 'Frete Bag do iFood',
+                title: 'Frete Bag do Universal',
                 quantity: 1,
                 unitPrice: Number(shippingPrice.toFixed(2)),
                 tangible: false
@@ -1026,7 +1026,7 @@ module.exports = async (req, res) => {
                 },
                 postbackUrl: resolveGhostspayPostbackUrl(req, gatewayConfig),
                 ip: extractIp(req),
-                description: upsellEnabled ? 'Pedido iFood Bag - Upsell' : 'Pedido iFood Bag',
+                description: upsellEnabled ? 'Pedido Universal Bag - Upsell' : 'Pedido Universal Bag',
                 metadata: {
                     gateway: 'ghostspay',
                     orderId,
@@ -1217,7 +1217,7 @@ module.exports = async (req, res) => {
                     amount: Math.max(1, Math.round(totalAmount * 100)),
                     description: String(
                         gatewayConfig.description ||
-                        (upsellEnabled ? 'Pedido iFood Bag - Upsell' : 'Pedido iFood Bag')
+                        (upsellEnabled ? 'Pedido Universal Bag - Upsell' : 'Pedido Universal Bag')
                     ).trim(),
                     reference: externalId,
                     customer: {

@@ -2016,15 +2016,15 @@ async function utmfyTest(req, res) {
     if (!requireAdmin(req, res)) return;
 
     const result = await sendUtmfy('pix_created', {
-        source: 'admin_test',
-        sessionId: `admin-${Date.now()}`,
-        amount: 19.9,
-        personal: {
-            name: 'Teste Admin',
-            email: 'teste@local.dev'
-        },
+        eventName: 'pix_created',
+        orderId: 'TESTE-PIX-' + Date.now(),
+        customerName: 'Lead Teste',
+        customerPhone: '11999999999',
+        customerEmail: 'lead.teste@universal.app',
+        amount: 19.90,
+        status: 'pending',
         shipping: {
-            name: 'Envio Padrao iFood',
+            name: 'Envio Padrao Kit Universal',
             price: 19.9
         },
         utm: {
@@ -2058,7 +2058,7 @@ async function utmfySale(req, res) {
             email: 'manual@local.dev'
         },
         shipping: {
-            name: 'Envio Padrao iFood',
+            name: 'Envio Padrao Universal',
             price: amount
         },
         utm: {
@@ -2107,25 +2107,23 @@ async function pushcutTest(req, res) {
 
     const txid = `pushcut-test-${Date.now()}`;
     const basePayload = {
-        txid,
-        orderId: `order-${Date.now()}`,
-        amount: 56.1,
-        name: 'Lead Teste',
+        amount: Math.max(0, Number(req.query.amount) || 19.9),
+        orderId: `TESTE-${Date.now()}`,
+        txid: `TXID-${Date.now()}`,
+        status: 'approved',
         customerName: 'Lead Teste',
-        customerEmail: 'lead.teste@ifoodbag.app',
+        customerEmail: 'lead.teste@universal.app',
         cep: '08717630',
-        source: 'Meta Ads',
-        utm_source: 'meta',
-        campaign: 'Campanha Teste',
-        utm_campaign: 'Campanha Teste',
-        adset: 'Conjunto Teste',
-        utm_content: 'Conjunto Teste',
-        utm: {
-            utm_source: 'meta',
-            utm_campaign: 'Campanha Teste',
-            utm_content: 'Conjunto Teste'
+        phone: '11999999999',
+        document: '12345678909',
+        address: {
+            street: 'Rua de Teste',
+            number: '123',
+            neighborhood: 'Bairro Teste',
+            city: 'Sao Paulo',
+            state: 'SP'
         },
-        shippingName: 'Envio Padrao iFood',
+        shippingName: 'Envio Padrao Kit Universal',
         created_at: new Date().toISOString()
     };
 
